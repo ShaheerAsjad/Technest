@@ -232,13 +232,29 @@ a {
   display: none;
 }
 
-@media (max-width: 767px) {
-  .navbar__icon-link--desktop {
-    display: none;
-  }
+.navbar__icon-emoji {
+  display: none;
+}
 
+@media (max-width: 767px) {
   .navbar__hamburger {
     display: flex;
+  }
+
+  .navbar__icon-link {
+    font-size: 13px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .navbar__icon-emoji {
+    display: inline;
+  }
+
+  .navbar__icon-label {
+    display: none;
   }
 
   .navbar__mobile-menu {

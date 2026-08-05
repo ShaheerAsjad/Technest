@@ -51,18 +51,6 @@ export default function Navbar() {
       </div>
 
       <div className="navbar__actions">
-        <button className="navbar__theme-btn" onClick={toggleTheme} aria-label="Toggle dark mode">
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
-        <Link href="/wishlist" className="navbar__icon-link navbar__icon-link--desktop">
-          Wishlist ({wishlistCount})
-        </Link>
-        <Link
-          href="/cart"
-          className={`navbar__icon-link navbar__icon-link--desktop${bounce ? ' navbar__icon-link--bounce' : ''}`}
-        >
-          Cart ({cartCount})
-        </Link>
         <button
           className="navbar__hamburger"
           onClick={() => setMenuOpen((v) => !v)}
@@ -73,6 +61,20 @@ export default function Navbar() {
           <span />
           <span />
         </button>
+        <button className="navbar__theme-btn" onClick={toggleTheme} aria-label="Toggle dark mode">
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+        <Link href="/wishlist" className="navbar__icon-link">
+          <span className="navbar__icon-emoji" aria-hidden="true">🤍</span>
+          <span className="navbar__icon-label">Wishlist</span> ({wishlistCount})
+        </Link>
+        <Link
+          href="/cart"
+          className={`navbar__icon-link${bounce ? ' navbar__icon-link--bounce' : ''}`}
+        >
+          <span className="navbar__icon-emoji" aria-hidden="true">🛒</span>
+          <span className="navbar__icon-label">Cart</span> ({cartCount})
+        </Link>
       </div>
 
       {menuOpen && (
@@ -81,12 +83,6 @@ export default function Navbar() {
           <Link href="/products" className="navbar__link" onClick={() => setMenuOpen(false)}>Products</Link>
           <Link href="/about" className="navbar__link" onClick={() => setMenuOpen(false)}>About</Link>
           <Link href="/contact" className="navbar__link" onClick={() => setMenuOpen(false)}>Contact</Link>
-          <Link href="/wishlist" className="navbar__link" onClick={() => setMenuOpen(false)}>
-            Wishlist ({wishlistCount})
-          </Link>
-          <Link href="/cart" className="navbar__link" onClick={() => setMenuOpen(false)}>
-            Cart ({cartCount})
-          </Link>
         </div>
       )}
     </nav>
