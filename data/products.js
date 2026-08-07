@@ -22,7 +22,7 @@ export const PRODUCTS = [
     stock: 24,
     rating: 4.8,
     reviewCount: 512,
-    image: 'https://images.pexels.com/photos/33104417/pexels-photo-33104417.jpeg?auto=compress&cs=tinysrgb&w=600',
+    image: 'https://images.pexels.com/photos/31059294/pexels-photo-31059294.jpeg',
     description: 'Titanium design with A18 Pro chip and pro-grade camera system.',
     tags: ['apple', 'ios', '5g', 'flagship'],
   },
