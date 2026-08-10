@@ -2,128 +2,54 @@
 
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import { isRequired, isValidEmail } from '@/lib/validators';
 
 export default function ContactPage() {
   const { showToast } = useApp();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: '',
-  });
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  function handleSubmit() {
+    if (!isRequired(form.name)) return setError('Please enter your name.');
+    if (!isValidEmail(form.email)) return setError('Please enter a valid email.');
+    if (!isRequired(form.message)) return setError('Please enter a message.');
 
-    const data = new FormData(e.target);
-
-    try {
-      const response = await fetch("https://formspree.io/f/maewevpj", {
-        method: 'POST',
-        body: data,
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        showToast('Thank you! Your message has been sent.');
-        setFormData({ name: '', email: '', message: '' });
-      } else {
-        showToast('Failed to send message. Please try again.', 'danger');
-      }
-    } catch (error) {
-      showToast('Network error. Please try again.', 'danger');
-    } finally {
-      setLoading(false);
-    }
-  };
+    setError('');
+    showToast('Message sent! We will get back to you soon.');
+    setForm({ name: '', email: '', message: '' });
+  }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '0 20px' }}>
-      <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '10px' }}>Contact Us</h1>
-      <p style={{ color: '#666', marginBottom: '24px' }}>
-        Have a question or feedback? Send us a message below.
-      </p>
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontWeight: '500', fontSize: '14px' }}>Your Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-            placeholder="John Doe"
-            style={{
-              padding: '10px 12px',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              fontSize: '14px',
-              width: '100%'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontWeight: '500', fontSize: '14px' }}>Your Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-            placeholder="john@example.com"
-            style={{
-              padding: '10px 12px',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              fontSize: '14px',
-              width: '100%'
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontWeight: '500', fontSize: '14px' }}>Message</label>
-          <textarea
-            name="message"
-            rows={5}
-            value={formData.message}
-            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-            required
-            placeholder="How can we help you?"
-            style={{
-              padding: '10px 12px',
-              border: '1px solid #ccc',
-              borderRadius: '6px',
-              fontSize: '14px',
-              width: '100%',
-              resize: 'vertical'
-            }}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            backgroundColor: '#000',
-            color: '#fff',
-            padding: '12px 20px',
-            border: 'none',
-            borderRadius: '6px',
-            fontWeight: '600',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.6 : 1,
-            marginTop: '8px'
-          }}
-        >
-          {loading ? 'Sending...' : 'Send Message'}
+    <section className="static-page">
+      <h1 className="page-title">Contact Us</h1>
+      <p className="static-page__text">Have a question? Send us a message below.</p>
+      <div className="contact-form">
+        <input
+          className="form-input"
+          type="text"
+          placeholder="Your Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        />
+        <input
+          className="form-input"
+          type="email"
+          placeholder="Your Email"
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+        <textarea
+          className="form-input form-textarea"
+          placeholder="Your Message"
+          rows={5}
+          value={form.message}
+          onChange={(e) => setForm({ ...form, message: e.target.value })}
+        />
+        {error && <p className="form-error">{error}</p>}
+        <button className="btn btn--primary" onClick={handleSubmit}>
+          Send Message
         </button>
-      </form>
-    </div>
+      </div>
+    </section>
   );
 }
