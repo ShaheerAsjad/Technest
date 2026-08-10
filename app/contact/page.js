@@ -1,55 +1,84 @@
 'use client';
-
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { isRequired, isValidEmail } from '@/lib/validators';
 
 export default function ContactPage() {
   const { showToast } = useApp();
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit() {
-    if (!isRequired(form.name)) return setError('Please enter your name.');
-    if (!isValidEmail(form.email)) return setError('Please enter a valid email.');
-    if (!isRequired(form.message)) return setError('Please enter a message.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
 
-    setError('');
-    showToast('Message sent! We will get back to you soon.');
-    setForm({ name: '', email: '', message: '' });
-  }
+    const formData = new FormData(e.target);
+
+    try {
+      const response = await fetch("https://formspree.io/f/maewevpj", {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        showToast('Thank you! Your message has been sent successfully.');
+        e.target.reset();
+      } else {
+        showToast('Something went wrong. Please try again.', 'danger');
+      }
+    } catch (error) {
+      showToast('Network error. Please check your internet connection.', 'danger');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <section className="static-page">
-      <h1 className="page-title">Contact Us</h1>
-      <p className="static-page__text">Have a question? Send us a message below.</p>
-      <div className="contact-form">
-        <input
-          className="form-input"
-          type="text"
-          placeholder="Your Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-        <input
-          className="form-input"
-          type="email"
-          placeholder="Your Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-        />
-        <textarea
-          className="form-input form-textarea"
-          placeholder="Your Message"
-          rows={5}
-          value={form.message}
-          onChange={(e) => setForm({ ...form, message: e.target.value })}
-        />
-        {error && <p className="form-error">{error}</p>}
-        <button className="btn btn--primary" onClick={handleSubmit}>
-          Send Message
+    <div className="max-w-2xl mx-auto px-4 py-12">
+      <h1 className="text-3xl font-bold mb-6 text-center">Contact Us</h1>
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg border shadow-sm">
+        <div>
+          <label className="block text-sm font-medium mb-1">Your Name</label>
+          <input
+            type="text"
+            name="name"
+            required
+            className="w-full border p-2 rounded-lg"
+            placeholder="John Doe"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Your Email</label>
+          <input
+            type="email"
+            name="email"
+            required
+            className="w-full border p-2 rounded-lg"
+            placeholder="john@example.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Message</label>
+          <textarea
+            name="message"
+            rows="5"
+            required
+            className="w-full border p-2 rounded-lg"
+            placeholder="How can we help you?"
+          ></textarea>
+        </div>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          {submitting ? 'Sending...' : 'Send Message'}
         </button>
-      </div>
-    </section>
+      </form>
+    </div>
   );
 }
