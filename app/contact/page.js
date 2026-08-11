@@ -19,15 +19,16 @@ export default function ContactPage() {
     setSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append('name', form.name);
-      formData.append('email', form.email);
-      formData.append('message', form.message);
-
+      // JSON format mein payload bhejna
       const response = await fetch("https://formspree.io/f/maewevpj", {
         method: 'POST',
-        body: formData,
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          message: form.message,
+        }),
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json'
         }
       });
@@ -75,8 +76,8 @@ export default function ContactPage() {
           onChange={(e) => setForm({ ...form, message: e.target.value })}
         />
         {error && <p className="form-error">{error}</p>}
-        <button 
-          className="btn btn--primary" 
+        <button
+          className="btn btn--primary"
           onClick={handleSubmit}
           disabled={submitting}
         >
