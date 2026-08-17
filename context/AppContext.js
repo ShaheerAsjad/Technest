@@ -23,7 +23,7 @@ function loadJSON(key, fallback) {
 export function AppProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
   const [toasts, setToasts] = useState([]);
   const [mounted, setMounted] = useState(false);
 
@@ -31,7 +31,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     setCart(loadJSON('technest_cart', []));
     setWishlist(loadJSON('technest_wishlist', []));
-    setTheme(loadJSON('technest_theme', 'light'));
+    setTheme(loadJSON('technest_theme', 'dark'));
     setMounted(true);
   }, []);
 
