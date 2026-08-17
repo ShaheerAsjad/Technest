@@ -1,3 +1,4 @@
+import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -11,15 +12,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
-        <Providers>
-          <Navbar />
-          <main id="page-root">{children}</main>
-          <Footer />
-          <BackToTop />
-        </Providers>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body>
+          <Providers>
+            <Navbar />
+            <main id="page-root">{children}</main>
+            <Footer />
+            <BackToTop />
+          </Providers>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

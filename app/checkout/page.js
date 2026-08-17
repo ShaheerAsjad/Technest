@@ -1,203 +1,226 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import {
-  useApp,
-  TAX_RATE,
-  FREE_SHIPPING_THRESHOLD,
-  STANDARD_SHIPPING_COST,
-  EXPRESS_SHIPPING_COST,
-} from '@/context/AppContext';
-import { formatPrice } from '@/lib/format';
-import { isRequired, isValidEmail, isValidZip } from '@/lib/validators';
-import { validateCoupon, getDiscount } from '@/lib/coupons';
-import Modal from '@/components/Modal';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useApp } from '@/context/AppContext';
+import { useUser, SignInButton } from '@clerk/nextjs';
 
 export default function CheckoutPage() {
-  const { cartDetailed, subtotal, clearCart, showToast } = useApp();
+  const router = useRouter();
+  const { isSignedIn, isLoaded } = useUser();
+  const { cart = [], clearCart } = useApp();
 
-  const [form, setForm] = useState({ name: '', email: '', address: '', city: '', zip: '' });
-  const [shippingMethod, setShippingMethod] = useState('standard');
-  const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [error, setError] = useState('');
-  const [orderId, setOrderId] = useState(null);
+  const [showAlert, setShowAlert] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
-  const discount = getDiscount(appliedCoupon, subtotal);
-  const taxable = Math.max(subtotal - discount, 0);
-  const tax = taxable * TAX_RATE;
-  const shippingCost =
-    subtotal >= FREE_SHIPPING_THRESHOLD
-      ? 0
-      : shippingMethod === 'express'
-      ? EXPRESS_SHIPPING_COST
-      : STANDARD_SHIPPING_COST;
-  const total = taxable + tax + shippingCost;
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    address: '',
+    city: ''
+  });
+  const [loading, setLoading] = useState(false);
 
-  function handleApplyCoupon() {
-    const coupon = validateCoupon(couponInput);
-    if (coupon) {
-      setAppliedCoupon(coupon);
-      showToast(`Coupon applied: ${coupon.label}`);
-    } else {
-      showToast('Invalid coupon code', 'danger');
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoadingProducts(true);
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("Checkout Products Fetch Error:", err);
+      } finally {
+        setLoadingProducts(false);
+      }
     }
+    fetchProducts();
+  }, []);
+
+  // Map real cart items with product details
+  const cartItems = cart
+    .map((item) => {
+      const targetId = String(item.id || item.productId);
+      const prod = products.find((p) => String(p.id) === targetId);
+      return prod ? { id: prod.id, name: prod.name || prod.title, price: prod.price, quantity: item.quantity || 1 } : null;
+    })
+    .filter(Boolean);
+
+  const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (cartItems.length === 0) {
+      alert('Your cart is empty! Please add products to cart before checking out.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          cartItems,
+          totalAmount
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(`Order Successful! Your Order ID is: #${data.orderId}`);
+        if (typeof clearCart === 'function') {
+          clearCart();
+        }
+        router.push(`/order-success?orderId=${data.orderId}`);
+      } else {
+        alert('Error: ' + (data.error || 'Failed to place order'));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong!');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isLoaded) {
+    return <div style={{ textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#6b7280' }}>Loading Checkout...</div>;
   }
 
-  function handlePlaceOrder() {
-    if (!isRequired(form.name)) return setError('Please enter your full name.');
-    if (!isValidEmail(form.email)) return setError('Please enter a valid email.');
-    if (!isRequired(form.address)) return setError('Please enter your address.');
-    if (!isRequired(form.city)) return setError('Please enter your city.');
-    if (!isValidZip(form.zip)) return setError('Please enter a valid ZIP code.');
-
-    setError('');
-    setOrderId(`TN-${Date.now().toString().slice(-8)}`);
-  }
-
-  function closeModalAndReset() {
-    setOrderId(null);
-    clearCart();
-    setAppliedCoupon(null);
-  }
-
-  if (cartDetailed.length === 0 && !orderId) {
+  // Agar user login nahi hai aur alert close nahi kiya, toh Access Denied alert card dikhayega
+  if (!isSignedIn && showAlert) {
     return (
-      <>
-        <h1 className="page-title">Checkout</h1>
-        <div className="empty-state">
-          <p>Your cart is empty. Add products before checking out.</p>
-          <Link href="/products" className="btn btn--primary">
-            Browse Products
-          </Link>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '70vh',
+        backgroundColor: '#f9f9f9',
+        padding: '20px'
+      }}>
+        <div style={{
+          position: 'relative',
+          background: '#fff',
+          padding: '40px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          textAlign: 'center',
+          maxWidth: '450px',
+          width: '100%'
+        }}>
+          {/* Cross (X) Button */}
+          <button 
+            onClick={() => setShowAlert(false)}
+            style={{
+              position: 'absolute',
+              top: '15px',
+              right: '15px',
+              background: 'transparent',
+              border: 'none',
+              fontSize: '24px',
+              cursor: 'pointer',
+              color: '#888',
+              lineHeight: 1
+            }}
+          >
+            &times;
+          </button>
+
+          <h2 style={{ color: '#d9534f', marginBottom: '15px', fontSize: '1.5rem', fontWeight: 'bold' }}>Access Denied</h2>
+          <p style={{ fontSize: '16px', color: '#333', marginBottom: '25px', lineHeight: '1.5' }}>
+            Aapne order place karne ke liye login nahi kiya hai. Pehle <strong>Sign In</strong> karein taake aapka order secure ho sake.
+          </p>
+
+          <SignInButton mode="modal">
+            <button style={{
+              background: '#0070f3',
+              color: '#fff',
+              border: 'none',
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              width: '100%'
+            }}>
+              Login Now
+            </button>
+          </SignInButton>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <h1 className="page-title">Checkout</h1>
-      <div className="cart-layout">
-        <div className="checkout-form">
-          <h2 className="section-title">Shipping Details</h2>
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Full Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '20px' }}>Checkout (Cash on Delivery)</h1>
+      
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Full Name</label>
+          <input 
+            type="text" required 
+            value={formData.name} 
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
           />
-          <input
-            className="form-input"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <input
-            className="form-input"
-            type="text"
-            placeholder="Street Address"
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
-          <input
-            className="form-input"
-            type="text"
-            placeholder="City"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-          />
-          <input
-            className="form-input"
-            type="text"
-            placeholder="ZIP Code"
-            value={form.zip}
-            onChange={(e) => setForm({ ...form, zip: e.target.value })}
-          />
-          {error && <p className="form-error">{error}</p>}
+        </div>
 
-          <h2 className="section-title">Shipping Method</h2>
-          <div className="shipping-options">
-            <label className="shipping-option">
-              <input
-                type="radio"
-                name="shipping"
-                checked={shippingMethod === 'standard'}
-                onChange={() => setShippingMethod('standard')}
-              />
-              <span>Standard — {formatPrice(STANDARD_SHIPPING_COST)}</span>
-            </label>
-            <label className="shipping-option">
-              <input
-                type="radio"
-                name="shipping"
-                checked={shippingMethod === 'express'}
-                onChange={() => setShippingMethod('express')}
-              />
-              <span>Express — {formatPrice(EXPRESS_SHIPPING_COST)}</span>
-            </label>
-          </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Phone Number</label>
+          <input 
+            type="text" required 
+            value={formData.phone} 
+            onChange={(e) => setFormData({...formData, phone: e.target.value})}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+          />
+        </div>
 
-          <h2 className="section-title">Coupon</h2>
-          <div className="coupon-row">
-            <input
-              className="form-input"
-              type="text"
-              placeholder="Coupon code (try SAVE10)"
-              value={couponInput}
-              onChange={(e) => setCouponInput(e.target.value)}
-            />
-            <button className="btn btn--secondary" onClick={handleApplyCoupon}>
-              Apply
-            </button>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Delivery Address</label>
+          <textarea required 
+            value={formData.address} 
+            onChange={(e) => setFormData({...formData, address: e.target.value})}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>City</label>
+          <input 
+            type="text" required 
+            value={formData.city} 
+            onChange={(e) => setFormData({...formData, city: e.target.value})}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+          />
+        </div>
+
+        <div style={{ padding: '15px', background: '#f9fafb', borderRadius: '8px', marginTop: '10px' }}>
+          <strong>Payment Method:</strong> Cash on Delivery (COD)
+          <div style={{ marginTop: '5px', fontSize: '1.1rem', color: '#0070f3' }}>
+            Total Amount: ${totalAmount.toFixed(2)}
           </div>
         </div>
 
-        <aside className="order-summary">
-          <h2 className="section-title">Order Summary</h2>
-          <div className="summary__row">
-            <span>Subtotal</span>
-            <span>{formatPrice(subtotal)}</span>
-          </div>
-          {discount > 0 && (
-            <div className="summary__row">
-              <span>Discount</span>
-              <span>-{formatPrice(discount)}</span>
-            </div>
-          )}
-          <div className="summary__row">
-            <span>Tax</span>
-            <span>{formatPrice(tax)}</span>
-          </div>
-          <div className="summary__row">
-            <span>Shipping</span>
-            <span>{shippingCost === 0 ? 'Free' : formatPrice(shippingCost)}</span>
-          </div>
-          <div className="summary__row summary__row--total">
-            <span>Total</span>
-            <span className="summary__total-value">{formatPrice(total)}</span>
-          </div>
-          <button className="btn btn--primary summary__checkout-btn" onClick={handlePlaceOrder}>
-            Place Order
-          </button>
-        </aside>
-      </div>
-
-      <Modal open={!!orderId} title="Order Confirmed 🎉" onClose={closeModalAndReset}>
-        <p>Thank you, {form.name.split(' ')[0]}! Your order has been placed.</p>
-        <p>
-          Order ID: <strong>{orderId}</strong>
-        </p>
-        <p>
-          Total Paid: <strong>{formatPrice(total)}</strong>
-        </p>
-        <Link href="/" className="btn btn--primary" onClick={closeModalAndReset}>
-          Continue Shopping
-        </Link>
-      </Modal>
-    </>
+        <button 
+          type="submit" disabled={loading || loadingProducts}
+          style={{
+            backgroundColor: '#0070f3', color: '#fff', padding: '12px', border: 'none', 
+            borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px',
+            opacity: loading ? 0.7 : 1
+          }}
+        >
+          {loading ? 'Processing Order...' : 'Confirm & Place Order'}
+        </button>
+      </form>
+    </div>
   );
 }
