@@ -9,12 +9,15 @@ const HERO_IMAGE =
 export default function Hero() {
   const imageRef = useRef(null);
   const sectionRef = useRef(null);
+  const contentRef = useRef(null);
 
-  // Scroll-linked zoom: the background image slowly scales up as the user
-  // scrolls past the hero, similar to a parallax "zoom into the scene" effect.
+  // Scroll-linked 3D zoom + tilt: the background image scales and tilts
+  // slightly like a camera pushing into the scene, while the content
+  // parallaxes upward and fades — giving the hero real depth as you scroll.
   useEffect(() => {
     const section = sectionRef.current;
     const image = imageRef.current;
+    const content = contentRef.current;
     if (!section || !image) return;
 
     let ticking = false;
@@ -22,8 +25,13 @@ export default function Hero() {
     const update = () => {
       const rect = section.getBoundingClientRect();
       const progress = Math.min(Math.max(-rect.top / rect.height, 0), 1);
-      const scale = 1 + progress * 0.18;
-      image.style.transform = `scale(${scale})`;
+      const scale = 1 + progress * 0.22;
+      const tilt = progress * 4;
+      image.style.transform = `perspective(1000px) scale(${scale}) rotateX(${tilt}deg)`;
+      if (content) {
+        content.style.transform = `translateY(${progress * 40}px)`;
+        content.style.opacity = String(1 - progress * 0.9);
+      }
       ticking = false;
     };
 
@@ -49,7 +57,7 @@ export default function Hero() {
       <span className="hero__glow hero__glow--a" />
       <span className="hero__glow hero__glow--b" />
 
-      <div className="hero__content">
+      <div className="hero__content" ref={contentRef}>
         <span className="hero__badge">✦ New season, new tech</span>
         <h1 className="hero__title">Tech that moves you forward</h1>
         <p className="hero__subtitle">
