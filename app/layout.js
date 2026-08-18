@@ -8,14 +8,22 @@ import AmbientGlow from '@/components/AmbientGlow';
 import Providers from './providers';
 
 export const metadata = {
-  title: 'TechNest — Tech Products Store',
-  description: 'Phones, laptops, gaming gear, and accessories — all in one place.',
+  title: 'TechNest — Premium Tech Marketplace',
+  description: 'Phones, laptops, gaming gear, and accessories — curated for the future. Shop the latest tech at TechNest.',
 };
 
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en" data-theme="dark">
+        <head>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+            rel="stylesheet"
+          />
+        </head>
         <body>
           <IntroLoader />
           <Providers>
