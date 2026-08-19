@@ -3,33 +3,23 @@
 import { useEffect, useState } from 'react';
 
 export default function IntroLoader() {
-  const [visible, setVisible] = useState(false);
-  const [fading,  setFading]  = useState(false);
+  const [visible, setVisible] = useState(true); // For testing, always true on load.
+  const [stage, setStage] = useState('drawing'); // 'drawing' -> 'popping' -> 'fading'
 
   useEffect(() => {
-    let shown = true;
-    try {
-      shown = sessionStorage.getItem('technest_intro_shown');
-    } catch {
-      shown = true;
-    }
-    if (shown) return;
-
-    setVisible(true);
+    // Hide scrolling during intro
     document.body.style.overflow = 'hidden';
 
-    const fadeTimer = setTimeout(() => setFading(true),  1100);
+    // Sequence timing
+    const popTimer = setTimeout(() => setStage('popping'), 2200);
+    const fadeTimer = setTimeout(() => setStage('fading'), 3200);
     const hideTimer = setTimeout(() => {
       setVisible(false);
       document.body.style.overflow = '';
-      try {
-        sessionStorage.setItem('technest_intro_shown', '1');
-      } catch {
-        // sessionStorage unavailable — intro will replay next load
-      }
-    }, 1550);
+    }, 4000);
 
     return () => {
+      clearTimeout(popTimer);
       clearTimeout(fadeTimer);
       clearTimeout(hideTimer);
       document.body.style.overflow = '';
@@ -39,17 +29,48 @@ export default function IntroLoader() {
   if (!visible) return null;
 
   return (
-    <div className={`intro-loader${fading ? ' intro-loader--fading' : ''}`} aria-hidden="true">
-      <div className="intro-loader__glow" />
-
-      <div className="intro-loader__mark">
-        <span className="intro-loader__ring-outer" />
-        <span className="intro-loader__ring" />
-        <span className="intro-loader__logo">TN</span>
+    <div className={`intro-loader intro-loader--${stage}`} aria-hidden="true">
+      {/* Abstract Circuit Background */}
+      <div className="intro-loader__circuit-bg">
+        <svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" className="circuit-svg">
+          {/* Top Left */}
+          <path d="M0,200 L300,200 L400,300 L450,300 L500,400" className="circuit-line circuit-line--cyan" />
+          <path d="M100,0 L100,100 L250,250 L400,250 L480,350" className="circuit-line circuit-line--amber" />
+          
+          {/* Top Right */}
+          <path d="M1000,150 L750,150 L650,250 L550,250 L500,300" className="circuit-line circuit-line--cyan" />
+          
+          {/* Bottom Left */}
+          <path d="M0,800 L200,800 L300,700 L400,700 L500,600" className="circuit-line circuit-line--amber" />
+          <path d="M150,1000 L150,850 L350,650 L450,650 L500,600" className="circuit-line circuit-line--cyan" />
+          
+          {/* Bottom Right */}
+          <path d="M1000,900 L800,900 L650,750 L550,750 L500,650" className="circuit-line circuit-line--cyan" />
+          
+          {/* Center Connections */}
+          <path d="M350,500 L450,500 L500,500" className="circuit-line circuit-line--cyan" />
+          <path d="M650,500 L550,500 L500,500" className="circuit-line circuit-line--cyan" />
+          <path d="M500,350 L500,450 L500,500" className="circuit-line circuit-line--amber" />
+          <path d="M500,650 L500,550 L500,500" className="circuit-line circuit-line--amber" />
+          
+          {/* Glowing Data Nodes (Dots at end of circuits) */}
+          <circle cx="500" cy="400" r="4" className="circuit-node" />
+          <circle cx="500" cy="600" r="4" className="circuit-node" />
+          <circle cx="450" cy="500" r="4" className="circuit-node" />
+          <circle cx="550" cy="500" r="4" className="circuit-node" />
+        </svg>
       </div>
 
-      <p className="intro-loader__text">TechNest</p>
-      <p className="intro-loader__sub">The Future of Tech</p>
+      {/* Center Logo Reveal */}
+      <div className="intro-loader__center">
+        <div className="intro-loader__logo-wrapper">
+          <div className="intro-loader__glow-sphere" />
+          <div className="intro-loader__logo">T</div>
+        </div>
+        <div className="intro-loader__text-wrapper">
+          <span className="intro-loader__title">TechNest</span>
+        </div>
+      </div>
     </div>
   );
 }
