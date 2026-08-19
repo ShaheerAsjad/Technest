@@ -2,44 +2,43 @@
 
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
 
-const HERO_IMAGE =
-  'https://images.pexels.com/photos/986774/pexels-photo-986774.jpeg?auto=compress&cs=tinysrgb&w=1600';
+// Three.js canvas — client-side only, no SSR
+const ParticleHero = dynamic(() => import('./ParticleHero'), {
+  ssr: false,
+  loading: () => null,
+});
 
 export default function Hero() {
-  const imageRef   = useRef(null);
   const sectionRef = useRef(null);
   const contentRef = useRef(null);
+  const overlayRef = useRef(null);
 
-  // Scroll-linked 3D zoom + tilt: the background image scales and tilts
-  // slightly like a camera pushing into the scene, while the content
-  // parallaxes upward and fades — giving the hero real depth as you scroll.
+  // Scroll-linked parallax: content rises & fades, overlay deepens
   useEffect(() => {
     const section = sectionRef.current;
-    const image   = imageRef.current;
     const content = contentRef.current;
-    if (!section || !image) return;
+    if (!section || !content) return;
 
     let ticking = false;
 
     const update = () => {
       const rect     = section.getBoundingClientRect();
       const progress = Math.min(Math.max(-rect.top / rect.height, 0), 1);
-      const scale    = 1 + progress * 0.22;
-      const tilt     = progress * 4;
-      image.style.transform = `perspective(1000px) scale(${scale}) rotateX(${tilt}deg)`;
+
       if (content) {
-        content.style.transform = `translateY(${progress * 40}px)`;
-        content.style.opacity   = String(1 - progress * 0.9);
+        content.style.transform = `translateY(${progress * 50}px)`;
+        content.style.opacity   = String(1 - progress * 0.85);
+      }
+      if (overlayRef.current) {
+        overlayRef.current.style.opacity = String(0.55 + progress * 0.35);
       }
       ticking = false;
     };
 
     const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(update);
-        ticking = true;
-      }
+      if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
     };
 
     update();
@@ -49,19 +48,19 @@ export default function Hero() {
 
   return (
     <section className="hero" ref={sectionRef}>
-      {/* Background image with parallax */}
-      <div className="hero__image-wrap">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img ref={imageRef} src={HERO_IMAGE} alt="" className="hero__image" />
-      </div>
 
-      {/* Overlays */}
-      <div className="hero__overlay" />
+      {/* ── Three.js Particle Canvas — absolute behind everything ── */}
+      <ParticleHero />
+
+      {/* Overlays stacked on top of canvas */}
+      <div className="hero__overlay" ref={overlayRef} />
       <div className="hero__grid" aria-hidden="true" />
+
+      {/* Subtle radial light leaks (keep from old design) */}
       <span className="hero__glow hero__glow--a" />
       <span className="hero__glow hero__glow--b" />
 
-      {/* Content */}
+      {/* ── Content ── */}
       <div className="hero__content" ref={contentRef}>
         <span className="hero__badge">
           <span style={{ color: 'var(--cyan)', fontSize: '10px' }}>✦</span>
@@ -69,8 +68,8 @@ export default function Hero() {
         </span>
 
         <h1 className="hero__title">
-          Tech that moves<br />
-          <em>you forward</em>
+          Intelligent Solutions<br />
+          <em>Powered by Tech.</em>
         </h1>
 
         <p className="hero__subtitle">
