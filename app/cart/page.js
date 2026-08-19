@@ -57,133 +57,129 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="container py-8">
-        <h1 className="page-title mb-6">Your Cart</h1>
-        <p>Loading Cart…</p>
+      <div className="cart-page">
+        <div className="container py-8 text-center" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="catalog-spinner" aria-hidden="true" style={{ margin: '0 auto 16px' }} />
+          <p className="catalog-loading-text">Loading Cart…</p>
+        </div>
       </div>
     );
   }
 
   if (cartItems.length === 0) {
     return (
-      <div className="container py-8 text-center">
-        <h1 className="page-title mb-4">Your Cart</h1>
-        <p className="mb-6">Your cart is currently empty.</p>
-        <Link href="/products" className="btn btn--primary">
-          Continue Shopping
-        </Link>
+      <div className="cart-page">
+        <div className="container py-8">
+          <div className="catalog-empty">
+            <h1 className="page-title mb-4">Your Cart</h1>
+            <p className="catalog-empty__text mb-6">Your cart is currently empty.</p>
+            <Link href="/products" className="btn btn--primary">
+              Continue Shopping →
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container py-8">
-      <h1 className="page-title mb-6">Your Cart</h1>
+    <div className="cart-page">
+      <div className="container py-8">
+        <h1 className="page-title mb-6">Your Cart</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2rem', alignItems: 'start' }}>
-        {/* Cart Items List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {cartItems.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1.25rem',
-                padding: '1rem',
-                background: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '12px',
-              }}
-            >
-              <div style={{ width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: '#f9fafb' }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
+        <div className="cart-layout">
+          {/* ── Cart Items List ── */}
+          <div className="cart-items">
+            {cartItems.map((item) => (
+              <div key={item.id} className="cart-item">
+                <div className="cart-item__img-wrap">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.image} alt={item.name} className="cart-item__img" />
+                </div>
 
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: '600', margin: '0 0 4px 0' }}>{item.name}</h3>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>{formatPrice(item.price)}</p>
-              </div>
+                <div className="cart-item__details">
+                  <h3 className="cart-item__title">{item.name}</h3>
+                  <p className="cart-item__price">{formatPrice(item.price)}</p>
+                </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #d1d5db', borderRadius: '6px' }}>
+                <div className="cart-qty-ctrl">
+                  <button
+                    type="button"
+                    className="cart-qty-btn"
+                    onClick={() => handleQuantityChange(item, item.quantity - 1)}
+                    aria-label="Decrease quantity"
+                  >
+                    −
+                  </button>
+                  <span className="cart-qty-value">{item.quantity}</span>
+                  <button
+                    type="button"
+                    className="cart-qty-btn"
+                    onClick={() => handleQuantityChange(item, item.quantity + 1)}
+                    disabled={item.quantity >= (item.stock || 99)}
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <div className="cart-item__total">
+                  {formatPrice(item.price * item.quantity)}
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => handleQuantityChange(item, item.quantity - 1)}
-                  style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '1rem' }}
+                  className="cart-item__remove"
+                  onClick={() => handleRemove(item)}
+                  aria-label="Remove item"
                 >
-                  −
-                </button>
-                <span style={{ width: '24px', textAlign: 'center', fontWeight: '500' }}>{item.quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => handleQuantityChange(item, item.quantity + 1)}
-                  style={{ width: '32px', height: '32px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '1rem' }}
-                >
-                  +
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
                 </button>
               </div>
+            ))}
+          </div>
 
-              <div style={{ fontWeight: '700', width: '90px', textAlign: 'right' }}>
-                {formatPrice(item.price * item.quantity)}
+          {/* ── Order Summary ── */}
+          <div className="cart-summary-panel">
+            <h2 className="cart-summary__title">Order Summary</h2>
+
+            <div className="cart-summary__rows">
+              <div className="cart-summary__row">
+                <span>Subtotal</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
+              <div className="cart-summary__row">
+                <span>Tax (5%)</span>
+                <span>{formatPrice(tax)}</span>
+              </div>
+              <div className="cart-summary__row">
+                <span>Shipping</span>
+                <span className="cart-summary__free">Free</span>
+              </div>
+            </div>
 
-              <button
-                type="button"
-                onClick={() => handleRemove(item)}
-                style={{ border: 'none', background: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: '500', marginLeft: '0.5rem' }}
-              >
-                Remove
+            <div className="cart-summary__total-row">
+              <span>Total</span>
+              <span>{formatPrice(total)}</span>
+            </div>
+
+            <Link href="/checkout" style={{ textDecoration: 'none', display: 'block' }}>
+              <button className="btn btn--primary cart-summary__btn">
+                Proceed to Checkout →
               </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Order Summary Box */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.25rem' }}>Order Summary</h2>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem', fontSize: '0.95rem', color: '#4b5563' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Subtotal</span>
-              <span>{formatPrice(subtotal)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Tax</span>
-              <span>{formatPrice(tax)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>Shipping</span>
-              <span>Free</span>
+            </Link>
+            
+            <div className="cart-summary__secure">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Secure Checkout
             </div>
           </div>
-
-          <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', fontWeight: '700', fontSize: '1.15rem' }}>
-            <span>Total</span>
-            <span>{formatPrice(total)}</span>
-          </div>
-
-          {/* Proceed to Checkout Button */}
-          <Link href="/checkout" style={{ textDecoration: 'none', display: 'block', width: '100%' }}>
-            <button
-              style={{
-                width: '100%',
-                backgroundColor: '#0070f3',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px 16px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0051cc'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0070f3'}
-            >
-              Proceed to Checkout
-            </button>
-          </Link>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { useUser, SignInButton } from '@clerk/nextjs';
+import { formatPrice } from '@/lib/format';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -49,7 +50,9 @@ export default function CheckoutPage() {
     })
     .filter(Boolean);
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const tax = subtotal * 0.05;
+  const totalAmount = subtotal + tax;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +78,6 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert(`Order Successful! Your Order ID is: #${data.orderId}`);
         if (typeof clearCart === 'function') {
           clearCart();
         }
@@ -91,67 +93,44 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!isLoaded) {
-    return <div style={{ textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#6b7280' }}>Loading Checkout...</div>;
+  if (!isLoaded || loadingProducts) {
+    return (
+      <div className="container py-8 text-center" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="catalog-spinner" aria-hidden="true" style={{ margin: '0 auto 16px' }} />
+        <p className="catalog-loading-text">Loading Checkout…</p>
+      </div>
+    );
   }
 
-  // Agar user login nahi hai aur alert close nahi kiya, toh Access Denied alert card dikhayega
+  // Access Denied Modal (for unauthenticated users)
   if (!isSignedIn && showAlert) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '70vh',
-        backgroundColor: '#f9f9f9',
-        padding: '20px'
-      }}>
-        <div style={{
-          position: 'relative',
-          background: '#fff',
-          padding: '40px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-          textAlign: 'center',
-          maxWidth: '450px',
-          width: '100%'
-        }}>
-          {/* Cross (X) Button */}
+      <div className="checkout-auth-guard">
+        <div className="checkout-auth-panel">
+          <div className="checkout-auth-glow" aria-hidden="true" />
           <button 
+            className="checkout-auth-close"
             onClick={() => setShowAlert(false)}
-            style={{
-              position: 'absolute',
-              top: '15px',
-              right: '15px',
-              background: 'transparent',
-              border: 'none',
-              fontSize: '24px',
-              cursor: 'pointer',
-              color: '#888',
-              lineHeight: 1
-            }}
+            aria-label="Close"
           >
             &times;
           </button>
 
-          <h2 style={{ color: '#d9534f', marginBottom: '15px', fontSize: '1.5rem', fontWeight: 'bold' }}>Access Denied</h2>
-          <p style={{ fontSize: '16px', color: '#333', marginBottom: '25px', lineHeight: '1.5' }}>
-            Aapne order place karne ke liye login nahi kiya hai. Pehle <strong>Sign In</strong> karein taake aapka order secure ho sake.
+          <div className="checkout-auth-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          
+          <h2 className="checkout-auth-title">Authentication Required</h2>
+          <p className="checkout-auth-text">
+            To ensure your order is processed securely and can be tracked, please sign in or create an account before proceeding to checkout.
           </p>
 
           <SignInButton mode="modal">
-            <button style={{
-              background: '#0070f3',
-              color: '#fff',
-              border: 'none',
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '600',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              width: '100%'
-            }}>
-              Login Now
+            <button className="btn btn--primary" style={{ width: '100%', padding: '14px', fontSize: '15px' }}>
+              Sign In to Continue
             </button>
           </SignInButton>
         </div>
@@ -160,67 +139,142 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '40px auto', padding: '20px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '20px' }}>Checkout (Cash on Delivery)</h1>
-      
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Full Name</label>
-          <input 
-            type="text" required 
-            value={formData.name} 
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
-          />
+    <div className="checkout-page">
+      <div className="container py-8">
+        
+        <div className="checkout-header">
+          <h1 className="page-title">Secure Checkout</h1>
+          <p className="catalog-page__sub">Complete your order details below.</p>
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Phone Number</label>
-          <input 
-            type="text" required 
-            value={formData.phone} 
-            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
-          />
-        </div>
+        <div className="checkout-layout">
+          {/* Left: Checkout Form */}
+          <div className="checkout-panel">
+            <h2 className="checkout-panel__heading">Shipping Details</h2>
+            
+            <form onSubmit={handleSubmit} className="contact-form">
+              <div className="contact-form__row">
+                <div className="contact-form__field">
+                  <label className="form-label">Full Name</label>
+                  <input 
+                    type="text" required 
+                    className="form-input"
+                    placeholder="Ali Hassan"
+                    value={formData.name} 
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  />
+                </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Delivery Address</label>
-          <textarea required 
-            value={formData.address} 
-            onChange={(e) => setFormData({...formData, address: e.target.value})}
-            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
-          />
-        </div>
+                <div className="contact-form__field">
+                  <label className="form-label">Phone Number</label>
+                  <input 
+                    type="tel" required 
+                    className="form-input"
+                    placeholder="+92 300 1234567"
+                    value={formData.phone} 
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  />
+                </div>
+              </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>City</label>
-          <input 
-            type="text" required 
-            value={formData.city} 
-            onChange={(e) => setFormData({...formData, city: e.target.value})}
-            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #d1d5db' }}
-          />
-        </div>
+              <div className="contact-form__field">
+                <label className="form-label">Delivery Address</label>
+                <textarea required 
+                  className="form-input form-textarea"
+                  placeholder="Street address, apartment, suite, etc."
+                  rows={3}
+                  value={formData.address} 
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                />
+              </div>
 
-        <div style={{ padding: '15px', background: '#f9fafb', borderRadius: '8px', marginTop: '10px' }}>
-          <strong>Payment Method:</strong> Cash on Delivery (COD)
-          <div style={{ marginTop: '5px', fontSize: '1.1rem', color: '#0070f3' }}>
-            Total Amount: ${totalAmount.toFixed(2)}
+              <div className="contact-form__field">
+                <label className="form-label">City</label>
+                <input 
+                  type="text" required 
+                  className="form-input"
+                  placeholder="Karachi"
+                  value={formData.city} 
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                />
+              </div>
+
+              <div className="checkout-payment-box mt-4">
+                <div className="checkout-payment-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                  <span>Payment Method</span>
+                </div>
+                <div className="checkout-payment-method">
+                  <input type="radio" checked readOnly id="cod" />
+                  <label htmlFor="cod">Cash on Delivery (COD)</label>
+                </div>
+              </div>
+
+              <button 
+                type="submit" 
+                className="btn btn--primary contact-form__submit mt-6"
+                disabled={loading || loadingProducts || cartItems.length === 0}
+              >
+                {loading ? (
+                  <>
+                    <span className="contact-form__spinner" aria-hidden="true" />
+                    Processing...
+                  </>
+                ) : (
+                  'Confirm & Place Order'
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Right: Order Summary */}
+          <div className="checkout-summary">
+            <h2 className="cart-summary__title">Order Review</h2>
+            
+            <div className="checkout-summary__items">
+              {cartItems.map((item) => (
+                <div key={item.id} className="checkout-summary__item">
+                  <div className="checkout-summary__item-info">
+                    <span className="checkout-summary__item-qty">{item.quantity}×</span>
+                    <span className="checkout-summary__item-name">{item.name}</span>
+                  </div>
+                  <span className="checkout-summary__item-price">{formatPrice(item.price * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="cart-summary__rows mt-4">
+              <div className="cart-summary__row">
+                <span>Subtotal</span>
+                <span>{formatPrice(subtotal)}</span>
+              </div>
+              <div className="cart-summary__row">
+                <span>Tax (5%)</span>
+                <span>{formatPrice(tax)}</span>
+              </div>
+              <div className="cart-summary__row">
+                <span>Shipping</span>
+                <span className="cart-summary__free">Free</span>
+              </div>
+            </div>
+
+            <div className="cart-summary__total-row">
+              <span>Total</span>
+              <span className="checkout-total-val">{formatPrice(totalAmount)}</span>
+            </div>
+            
+            <div className="cart-summary__secure mt-4">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              Information is encrypted & secure
+            </div>
           </div>
         </div>
-
-        <button 
-          type="submit" disabled={loading || loadingProducts}
-          style={{
-            backgroundColor: '#0070f3', color: '#fff', padding: '12px', border: 'none', 
-            borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px',
-            opacity: loading ? 0.7 : 1
-          }}
-        >
-          {loading ? 'Processing Order...' : 'Confirm & Place Order'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
