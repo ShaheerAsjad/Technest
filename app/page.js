@@ -1,4 +1,5 @@
 import Hero from '@/components/Hero';
+import InteractiveDashboard from '@/components/InteractiveDashboard';
 import Categories from '@/components/Categories';
 import ProductCard from '@/components/ProductCard';
 import sql from '@/lib/db';
@@ -46,30 +47,8 @@ export default async function HomePage() {
       {/* ── Cinematic Hero ── */}
       <Hero />
 
-      {/* ── Stats ribbon ── */}
-      <div className="home-stats">
-        <div className="home-stats__inner">
-          <div className="home-stats__item">
-            <span className="home-stats__value">{featured.length > 0 ? `${featured.length}+` : '30+'}</span>
-            <span className="home-stats__label">Curated Products</span>
-          </div>
-          <div className="home-stats__divider" aria-hidden="true" />
-          <div className="home-stats__item">
-            <span className="home-stats__value">6</span>
-            <span className="home-stats__label">Categories</span>
-          </div>
-          <div className="home-stats__divider" aria-hidden="true" />
-          <div className="home-stats__item">
-            <span className="home-stats__value">4.6★</span>
-            <span className="home-stats__label">Avg. Rating</span>
-          </div>
-          <div className="home-stats__divider" aria-hidden="true" />
-          <div className="home-stats__item">
-            <span className="home-stats__value">COD</span>
-            <span className="home-stats__label">Cash on Delivery</span>
-          </div>
-        </div>
-      </div>
+      {/* ── Interactive SaaS Dashboard Preview ── */}
+      <InteractiveDashboard />
 
       {/* ── Shop by Category ── */}
       <Categories />
