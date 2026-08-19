@@ -1,5 +1,6 @@
 import Hero from '@/components/Hero';
 import InteractiveDashboard from '@/components/InteractiveDashboard';
+import FeaturesGrid from '@/components/FeaturesGrid';
 import Categories from '@/components/Categories';
 import ProductCard from '@/components/ProductCard';
 import sql from '@/lib/db';
@@ -49,6 +50,9 @@ export default async function HomePage() {
 
       {/* ── Interactive SaaS Dashboard Preview ── */}
       <InteractiveDashboard />
+
+      {/* ── Powerful Features Grid ── */}
+      <FeaturesGrid />
 
       {/* ── Shop by Category ── */}
       <Categories />
