@@ -148,11 +148,9 @@ export default function Navbar() {
           isSignedIn ? (
             <UserButton />
           ) : (
-            <SignInButton mode="modal">
-              <button type="button" className="navbar__signin-btn">
-                Sign In
-              </button>
-            </SignInButton>
+            <Link href="/sign-in" className="navbar__signin-btn">
+              Sign In
+            </Link>
           )
         )}
       </div>
@@ -172,11 +170,9 @@ export default function Navbar() {
               isSignedIn ? (
                 <UserButton />
               ) : (
-                <SignInButton mode="modal">
-                  <button type="button" className="navbar__signin-btn" style={{ width: '100%' }} onClick={closeMenu}>
-                    Sign In
-                  </button>
-                </SignInButton>
+                <Link href="/sign-in" className="navbar__signin-btn" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={closeMenu}>
+                  Sign In
+                </Link>
               )
             )}
           </div>
