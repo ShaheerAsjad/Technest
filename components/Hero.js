@@ -62,44 +62,44 @@ export default function Hero() {
 
       {/* ── Content ── */}
       <div className="hero__content" ref={contentRef}>
-        <span className="hero__badge">
-          <span style={{ color: 'var(--cyan)', fontSize: '10px' }}>✦</span>
-          &nbsp;2026 Collection — Now Live
+        <span className="hero__badge" style={{ borderColor: 'rgba(255,102,0,0.3)', background: 'rgba(255,102,0,0.05)' }}>
+          <span style={{ color: '#FF6600', fontSize: '10px' }}>✦</span>
+          &nbsp;TechNest Exclusive Drops
         </span>
 
         <h1 className="hero__title">
-          Intelligent Solutions<br />
-          <em>Powered by Tech.</em>
+          Next-Gen Tech<br />
+          <em style={{ color: '#FF6600', WebkitTextFillColor: 'initial' }}>For Creators.</em>
         </h1>
 
         <p className="hero__subtitle">
-          Phones, laptops, gaming gear, and accessories —<br />
-          all curated for the next generation of makers.
+          Unleash your potential with high-end phones, laptops, and gaming gear.<br />
+          Engineered for performance, designed for the future.
         </p>
 
         <div className="hero__cta-row">
-          <Link href="/products" className="btn btn--primary hero__cta">
+          <Link href="/products" className="btn btn--primary hero__cta" style={{ background: '#FF6600', color: '#000', boxShadow: '0 0 20px rgba(255,102,0,0.4)' }}>
             Shop Now
           </Link>
-          <Link href="/about" className="btn btn--ghost hero__cta-secondary">
-            Learn More →
+          <Link href="/categories" className="btn btn--ghost hero__cta-secondary" style={{ borderColor: 'rgba(255,102,0,0.3)', color: '#FF6600' }}>
+            Explore Categories →
           </Link>
         </div>
 
         {/* Trust badges */}
         <div className="hero__trust">
           <span className="hero__trust-item">
-            <span className="hero__trust-dot" />
+            <span className="hero__trust-dot" style={{ background: '#FF6600', boxShadow: '0 0 8px #FF6600' }} />
             Free Shipping $100+
           </span>
           <span className="hero__trust-sep" aria-hidden="true">·</span>
           <span className="hero__trust-item">
-            <span className="hero__trust-dot" />
+            <span className="hero__trust-dot" style={{ background: '#FF6600', boxShadow: '0 0 8px #FF6600' }} />
             Cash on Delivery
           </span>
           <span className="hero__trust-sep" aria-hidden="true">·</span>
           <span className="hero__trust-item">
-            <span className="hero__trust-dot" />
+            <span className="hero__trust-dot" style={{ background: '#FF6600', boxShadow: '0 0 8px #FF6600' }} />
             Easy Returns
           </span>
         </div>
@@ -107,7 +107,7 @@ export default function Hero() {
 
       {/* Scroll indicator */}
       <div className="hero__scroll-hint" aria-hidden="true">
-        <span className="hero__scroll-dot" />
+        <span className="hero__scroll-dot" style={{ background: '#FF6600' }} />
       </div>
     </section>
   );

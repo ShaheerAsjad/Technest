@@ -33,7 +33,7 @@ export default function ParticleHero() {
     camera.position.set(0, 0, 38);
 
     /* ─────────────────────────────────────────────────────────────
-       PARTICLES & CONNECTIONS
+       PARTICLES & CONNECTIONS (Neon Orange theme)
     ───────────────────────────────────────────────────────────── */
     const particlePositions = [];
     const particleVelocities = [];
@@ -66,7 +66,7 @@ export default function ParticleHero() {
     ptGeometry.setAttribute('position', new THREE.BufferAttribute(ptPositions, 3));
 
     const ptMaterial = new THREE.PointsMaterial({
-      color: 0x00D9FF,
+      color: 0xFF6600, // Neon Orange
       size: 0.28,
       transparent: true,
       opacity: 0.85,
@@ -83,15 +83,15 @@ export default function ParticleHero() {
     lineGeometry.setDrawRange(0, 0);
 
     const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0x00D9FF,
+      color: 0xFF4500, // Darker neon orange
       transparent: true,
-      opacity: 0.18,
+      opacity: 0.25,
     });
     const lineSegments = new THREE.LineSegments(lineGeometry, lineMaterial);
     scene.add(lineSegments);
 
     /* ─────────────────────────────────────────────────────────────
-       AMBER SUN ARC  (from the screenshots)
+       NEON ORANGE SUN ARC
     ───────────────────────────────────────────────────────────── */
     // Layered glow spheres — bloom-like without post-processing
     const sunGroup = new THREE.Group();
@@ -103,21 +103,21 @@ export default function ParticleHero() {
       return new THREE.Mesh(g, m);
     };
 
-    sunGroup.add(createGlowSphere(9.5,  0xFF8C00, 0.04));   // outer aura
-    sunGroup.add(createGlowSphere(8,    0xFF9500, 0.08));   // mid glow
-    sunGroup.add(createGlowSphere(6.2,  0xFFB020, 0.15));   // inner glow
-    sunGroup.add(createGlowSphere(4.5,  0xFFC040, 0.35));   // core
+    sunGroup.add(createGlowSphere(9.5,  0xFF2200, 0.04));   // outer aura
+    sunGroup.add(createGlowSphere(8,    0xFF3300, 0.08));   // mid glow
+    sunGroup.add(createGlowSphere(6.2,  0xFF4500, 0.15));   // inner glow
+    sunGroup.add(createGlowSphere(4.5,  0xFF6600, 0.35));   // core
 
     // Horizon arc (the bright curved line at the top of the sun)
     const arcGeo = new THREE.TorusGeometry(10, 0.07, 12, 240, Math.PI);
-    const arcMat = new THREE.MeshBasicMaterial({ color: 0xFFD060, transparent: true, opacity: 0.95 });
+    const arcMat = new THREE.MeshBasicMaterial({ color: 0xFF8800, transparent: true, opacity: 0.95 });
     const arc = new THREE.Mesh(arcGeo, arcMat);
     arc.rotation.z = Math.PI; // flip so the arc faces upward
     sunGroup.add(arc);
 
     // Second thicker arc for glow thickness
     const arcGeo2 = new THREE.TorusGeometry(10, 0.22, 8, 240, Math.PI);
-    const arcMat2 = new THREE.MeshBasicMaterial({ color: 0xFFB020, transparent: true, opacity: 0.25 });
+    const arcMat2 = new THREE.MeshBasicMaterial({ color: 0xFF4500, transparent: true, opacity: 0.25 });
     const arc2 = new THREE.Mesh(arcGeo2, arcMat2);
     arc2.rotation.z = Math.PI;
     sunGroup.add(arc2);
@@ -127,10 +127,10 @@ export default function ParticleHero() {
     /* ─────────────────────────────────────────────────────────────
        GRID FLOOR (subtle)
     ───────────────────────────────────────────────────────────── */
-    const gridHelper = new THREE.GridHelper(100, 28, 0x1a1a2e, 0x111122);
+    const gridHelper = new THREE.GridHelper(100, 28, 0x1f0b00, 0x140500); // Reddish-orange dark tint
     gridHelper.position.y = -18;
     gridHelper.material.transparent = true;
-    gridHelper.material.opacity = 0.35;
+    gridHelper.material.opacity = 0.45;
     scene.add(gridHelper);
 
     /* ─────────────────────────────────────────────────────────────
@@ -145,7 +145,7 @@ export default function ParticleHero() {
       starPos[i * 3 + 2] = (Math.random() - 0.5) * 80 - 30;
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.12, transparent: true, opacity: 0.4 });
+    const starMat = new THREE.PointsMaterial({ color: 0xffa07a, size: 0.12, transparent: true, opacity: 0.5 }); // Light salmon stars
     scene.add(new THREE.Points(starGeo, starMat));
 
     /* ─────────────────────────────────────────────────────────────
