@@ -3,7 +3,17 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+const TRACKING_STEPS = ['Order Placed', 'Packed', 'Shipped', 'Delivered'];
+
+const STEP_ICONS = {
+  'Order Placed': '📋',
+  'Packed':       '📦',
+  'Shipped':      '🚚',
+  'Delivered':    '✅',
+};
+
 function OrderTrackingContent() {
+  // ── Business logic — DO NOT MODIFY ────────────────────────────
   const searchParams = useSearchParams();
   const initialOrderId = searchParams.get('orderId') || '';
 
@@ -12,23 +22,21 @@ function OrderTrackingContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Auto-fetch if orderId exists in URL
   useEffect(() => {
     if (initialOrderId) {
       fetchOrderStatus(initialOrderId);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialOrderId]);
 
   const fetchOrderStatus = async (idToFetch) => {
     const id = idToFetch || orderId;
     if (!id) return;
-
     setLoading(true);
     setError('');
     try {
       const res = await fetch(`/api/orders/${id}`);
       const data = await res.json();
-
       if (res.ok) {
         setOrderData(data);
       } else {
@@ -42,87 +50,114 @@ function OrderTrackingContent() {
       setLoading(false);
     }
   };
+  // ─────────────────────────────────────────────────────────────
+
+  const currentStatus = orderData?.status || 'Order Placed';
+  const currentStepIndex = TRACKING_STEPS.indexOf(currentStatus);
 
   return (
-    <div style={{ maxWidth: '700px', margin: '40px auto', padding: '20px' }}>
-      <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '20px', color: '#111827' }}>
-        Track Your Order & Parcel
-      </h1>
+    <div className="container py-8">
+      <div className="orders-header">
+        <h1 className="page-title">Track Your Order</h1>
+        <p className="catalog-page__sub">Enter your Order ID to see real-time delivery status.</p>
+      </div>
 
       {/* Search Bar */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
-        <input 
-          type="text" 
-          placeholder="Enter Order ID (e.g. 1)" 
-          value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
-          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '1rem' }}
-        />
-        <button 
+      <div className="tracking-search mt-6">
+        <div className="catalog-search-wrap" style={{ maxWidth: '460px' }}>
+          <svg className="catalog-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            className="form-input catalog-search"
+            placeholder="Enter Order ID (e.g. 42)"
+            value={orderId}
+            onChange={(e) => setOrderId(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchOrderStatus()}
+          />
+        </div>
+        <button
+          className="btn btn--primary"
           onClick={() => fetchOrderStatus()}
           disabled={loading}
-          style={{ padding: '12px 24px', background: '#0070f3', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', opacity: loading ? 0.7 : 1 }}
+          style={{ padding: '12px 24px' }}
         >
-          {loading ? 'Searching...' : 'Track'}
+          {loading ? (
+            <>
+              <span className="contact-form__spinner" aria-hidden="true" />
+              Searching…
+            </>
+          ) : 'Track'}
         </button>
       </div>
 
-      {error && <div style={{ color: '#dc2626', marginBottom: '20px', fontWeight: '500' }}>{error}</div>}
+      {error && (
+        <div className="tracking-error mt-4">
+          ⚠ {error}
+        </div>
+      )}
 
-      {/* Order Details & Timeline */}
+      {/* Order Result Panel */}
       {orderData && (
-        <div style={{ background: '#fff', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px', marginBottom: '20px' }}>
+        <div className="tracking-panel mt-6">
+
+          {/* Header */}
+          <div className="tracking-panel__header">
             <div>
-              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Order ID:</span>
-              <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>#{orderData.id}</div>
+              <span className="order-card__label">Order ID</span>
+              <h2 className="order-card__id" style={{ fontSize: '1.4rem' }}>#{orderData.id}</h2>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Payment Status:</span>
-              <div style={{ color: '#d97706', fontWeight: 'bold' }}>{orderData.payment_method || 'Cash on Delivery'} (Pending)</div>
+            <div className="tracking-panel__payment">
+              <span className="order-card__label">Payment</span>
+              <span className="tracking-panel__cod">{orderData.payment_method || 'Cash on Delivery'} — Pending</span>
             </div>
           </div>
 
           {/* Progress Timeline */}
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '15px' }}>Delivery Progress</h3>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', position: 'relative' }}>
-            {['Order Placed', 'Packed', 'Shipped', 'Delivered'].map((step, index) => {
-              const currentStatus = orderData.status || 'Order Placed';
-              const isCurrent = currentStatus === step || (index === 0 && !orderData.status);
+          <h3 className="tracking-section-title">Delivery Progress</h3>
+          <div className="tracking-steps">
+            {TRACKING_STEPS.map((step, index) => {
+              const isComplete = index < currentStepIndex;
+              const isCurrent = index === currentStepIndex;
               return (
-                <div key={index} style={{ textAlign: 'center', zIndex: 1, flex: 1 }}>
-                  <div style={{ 
-                    width: '30px', height: '30px', borderRadius: '50%', background: isCurrent ? '#10b981' : '#e5e7eb', 
-                    color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px auto', fontWeight: 'bold', fontSize: '0.85rem' 
-                  }}>
-                    {index + 1}
+                <div
+                  key={step}
+                  className={`tracking-step ${isCurrent ? 'tracking-step--active' : ''} ${isComplete ? 'tracking-step--done' : ''}`}
+                >
+                  <div className="tracking-step__circle">
+                    <span className="tracking-step__icon">
+                      {isComplete ? '✓' : STEP_ICONS[step]}
+                    </span>
+                    {index < TRACKING_STEPS.length - 1 && (
+                      <div className={`tracking-step__line ${isComplete ? 'tracking-step__line--done' : ''}`} />
+                    )}
                   </div>
-                  <span style={{ fontSize: '0.85rem', color: isCurrent ? '#111827' : '#9ca3af', fontWeight: isCurrent ? 'bold' : 'normal' }}>
-                    {step}
-                  </span>
+                  <span className="tracking-step__label">{step}</span>
                 </div>
               );
             })}
           </div>
 
-          {/* Parcel Items List */}
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '10px' }}>Parcel Details (Items)</h3>
-          <div style={{ background: '#f9fafb', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
+          {/* Parcel Items */}
+          <h3 className="tracking-section-title mt-6">Parcel Contents</h3>
+          <div className="tracking-items">
             {Array.isArray(orderData.items) && orderData.items.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span>{item.name || item.title || 'Product'} (x{item.quantity || 1})</span>
-                <span style={{ fontWeight: '600' }}>${item.price}</span>
+              <div key={idx} className="order-card__item-row">
+                <span>{item.name || item.title || 'Product'} <span className="order-card__qty">× {item.quantity || 1}</span></span>
+                <span className="order-card__item-price">${Number(item.price).toFixed(2)}</span>
               </div>
             ))}
-            <div style={{ borderTop: '1px solid #e5e7eb', marginTop: '10px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
-              <span>Total Amount:</span>
-              <span style={{ color: '#0070f3' }}>${orderData.total_amount}</span>
+            <div className="tracking-items__total">
+              <span>Total Amount</span>
+              <span className="checkout-total-val">${Number(orderData.total_amount).toFixed(2)}</span>
             </div>
           </div>
 
-          <div>
-            <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>Delivery Address:</span>
-            <div style={{ fontWeight: '500' }}>{orderData.address}, {orderData.city}</div>
+          {/* Delivery Address */}
+          <div className="tracking-address mt-4">
+            <span className="order-card__label">Delivery Address</span>
+            <p className="tracking-address__value">{orderData.address}, {orderData.city}</p>
           </div>
         </div>
       )}
@@ -132,7 +167,11 @@ function OrderTrackingContent() {
 
 export default function OrderTrackingPage() {
   return (
-    <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px' }}>Loading Order Tracker...</div>}>
+    <Suspense fallback={
+      <div className="container py-8 text-center" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="catalog-spinner" style={{ margin: '0 auto' }} />
+      </div>
+    }>
       <OrderTrackingContent />
     </Suspense>
   );

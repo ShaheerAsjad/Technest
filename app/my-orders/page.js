@@ -4,21 +4,41 @@ import sql from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+// Status badge color mapping
+const STATUS_STYLES = {
+  'Delivered':     { color: '#00D084', bg: 'rgba(0,208,132,0.1)', border: 'rgba(0,208,132,0.25)' },
+  'Shipped':       { color: '#00D9FF', bg: 'rgba(0,217,255,0.1)', border: 'rgba(0,217,255,0.25)' },
+  'Packed':        { color: '#FFB020', bg: 'rgba(255,176,32,0.1)', border: 'rgba(255,176,32,0.25)' },
+  'Order Placed':  { color: '#A3A3A3', bg: 'rgba(163,163,163,0.1)', border: 'rgba(163,163,163,0.2)' },
+};
+
 export default async function MyOrdersPage() {
+  // ── Clerk Auth — DO NOT MODIFY ─────────────────────────────────
   const { userId } = await auth();
 
   if (!userId) {
     return (
-      <div style={{ maxWidth: '600px', margin: '50px auto', padding: '30px', textAlign: 'center', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '15px', color: '#111827' }}>My Orders</h1>
-        <p style={{ color: '#6b7280', marginBottom: '20px' }}>Please log in to view your purchase history and track your orders.</p>
-        <Link href="/products" style={{ display: 'inline-block', padding: '10px 20px', background: '#0070f3', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
-          Browse Products
-        </Link>
+      <div className="checkout-auth-guard">
+        <div className="checkout-auth-panel">
+          <div className="checkout-auth-glow" aria-hidden="true" />
+          <div className="checkout-auth-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+            </svg>
+          </div>
+          <h1 className="checkout-auth-title">My Orders</h1>
+          <p className="checkout-auth-text">
+            Please sign in to view your purchase history and track your orders.
+          </p>
+          <Link href="/products" className="btn btn--primary" style={{ width: '100%', textAlign: 'center', padding: '14px', display: 'block' }}>
+            Browse Products
+          </Link>
+        </div>
       </div>
     );
   }
 
+  // ── Neon DB fetch — DO NOT MODIFY ──────────────────────────────
   let orders = [];
   try {
     const ordersResult = await sql`SELECT * FROM orders WHERE user_id = ${userId} ORDER BY created_at DESC`;
@@ -26,88 +46,77 @@ export default async function MyOrdersPage() {
   } catch (error) {
     console.error("Fetch My Orders Error:", error);
   }
+  // ─────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '20px' }}>
-      <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '20px', color: '#111827' }}>
-        My Purchase History
-      </h1>
+    <div className="container py-8">
+      <div className="orders-header">
+        <h1 className="page-title">My Purchase History</h1>
+        <p className="catalog-page__sub">
+          {orders.length > 0 ? `${orders.length} order${orders.length > 1 ? 's' : ''} found` : 'No orders yet'}
+        </p>
+      </div>
 
       {orders.length === 0 ? (
-        <div style={{ background: '#fff', padding: '30px', borderRadius: '12px', textAlign: 'center', color: '#6b7280', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '15px' }}>You haven't placed any orders yet.</p>
-          <Link href="/products" style={{ display: 'inline-block', padding: '10px 20px', background: '#0070f3', color: '#fff', borderRadius: '8px', textDecoration: 'none', fontWeight: 'bold' }}>
-            Start Shopping
+        <div className="catalog-empty mt-6">
+          <div className="orders-empty-icon">📦</div>
+          <p className="catalog-empty__text" style={{ marginBottom: '20px' }}>You haven&apos;t placed any orders yet.</p>
+          <Link href="/products" className="btn btn--primary">
+            Start Shopping →
           </Link>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="orders-list">
           {orders.map((order) => {
             let itemsList = [];
             try {
               itemsList = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
-            } catch (e) {
+            } catch {
               itemsList = [];
             }
 
+            const status = order.status || 'Order Placed';
+            const statusStyle = STATUS_STYLES[status] || STATUS_STYLES['Order Placed'];
+
             return (
-              <div 
-                key={order.id} 
-                style={{ 
-                  background: '#ffffff', 
-                  border: '1px solid #e5e7eb', 
-                  borderRadius: '12px', 
-                  padding: '20px', 
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.04)' 
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f3f4f6', paddingBottom: '12px', marginBottom: '12px' }}>
+              <div key={order.id} className="order-card">
+                {/* Header row */}
+                <div className="order-card__header">
                   <div>
-                    <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>Order ID</span>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: '2px 0 0 0', color: '#111827' }}>#{order.id}</h3>
+                    <span className="order-card__label">Order ID</span>
+                    <h3 className="order-card__id">#{order.id}</h3>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <span 
-                      style={{ 
-                        padding: '4px 12px', 
-                        borderRadius: '20px', 
-                        fontSize: '0.85rem', 
-                        fontWeight: '600', 
-                        background: '#e0e7ff', 
-                        color: '#3730a3' 
-                      }}
-                    >
-                      {order.status || 'Order Placed'}
-                    </span>
-                  </div>
+                  <span
+                    className="order-card__status"
+                    style={{
+                      color: statusStyle.color,
+                      background: statusStyle.bg,
+                      border: `1px solid ${statusStyle.border}`,
+                    }}
+                  >
+                    {status}
+                  </span>
                 </div>
 
-                {/* Items Summary */}
-                <div style={{ marginBottom: '15px' }}>
+                {/* Items summary */}
+                <div className="order-card__items">
                   {itemsList.map((item, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.95rem', color: '#4b5563', marginBottom: '6px' }}>
-                      <span>{item.name || item.title || 'Product'} × {item.quantity || 1}</span>
-                      <span style={{ fontWeight: '500' }}>${(Number(item.price) * (item.quantity || 1)).toFixed(2)}</span>
+                    <div key={idx} className="order-card__item-row">
+                      <span>{item.name || item.title || 'Product'} <span className="order-card__qty">× {item.quantity || 1}</span></span>
+                      <span className="order-card__item-price">${(Number(item.price) * (item.quantity || 1)).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
-                <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Footer row */}
+                <div className="order-card__footer">
                   <div>
-                    <span style={{ fontSize: '0.85rem', color: '#6b7280', display: 'block' }}>Total Paid (COD)</span>
-                    <span style={{ fontSize: '1.15rem', fontWeight: 'bold', color: '#0070f3' }}>${Number(order.total_amount).toFixed(2)}</span>
+                    <span className="order-card__label">Total Paid (COD)</span>
+                    <span className="order-card__total">${Number(order.total_amount).toFixed(2)}</span>
                   </div>
-                  <Link 
+                  <Link
                     href={`/order-tracking?orderId=${order.id}`}
-                    style={{
-                      background: '#10b981',
-                      color: '#ffffff',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      textDecoration: 'none',
-                      fontWeight: '600',
-                      fontSize: '0.9rem'
-                    }}
+                    className="btn btn--secondary order-card__track-btn"
                   >
                     Track Order →
                   </Link>
