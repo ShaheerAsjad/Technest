@@ -3,8 +3,13 @@ import Categories from '@/components/Categories';
 import ProductCard from '@/components/ProductCard';
 import sql from '@/lib/db';
 
+export const metadata = {
+  title: 'TechNest — Premium Tech Marketplace',
+  description: 'Phones, laptops, gaming gear, and accessories — curated for the next generation.',
+};
+
 export default async function HomePage() {
-  // Neon PostgreSQL se products data fetch ho raha hai
+  // ── Neon PostgreSQL fetch — DO NOT MODIFY ──────────────────────
   let products = [];
   try {
     products = await sql`
@@ -25,24 +30,63 @@ export default async function HomePage() {
 
   // DB products ko ProductCard ke format mein convert karo
   const featured = products.map((p) => ({
-    id: p.id,
-    name: p.title,
+    id:          p.id,
+    name:        p.title,
     description: p.description,
-    price: parseFloat(p.price),
-    stock: p.stock,
-    category: p.category || 'General',
-    rating: 4, // Default rating 
-    image: p.image || '/placeholder.png', // DB se image dynamic le raha hai
+    price:       parseFloat(p.price),
+    stock:       p.stock,
+    category:    p.category || 'General',
+    rating:      4,                            // Default rating
+    image:       p.image || '/placeholder.png', // DB se image dynamic le raha hai
   }));
+  // ───────────────────────────────────────────────────────────────
 
   return (
     <>
+      {/* ── Cinematic Hero ── */}
       <Hero />
+
+      {/* ── Stats ribbon ── */}
+      <div className="home-stats">
+        <div className="home-stats__inner">
+          <div className="home-stats__item">
+            <span className="home-stats__value">{featured.length > 0 ? `${featured.length}+` : '30+'}</span>
+            <span className="home-stats__label">Curated Products</span>
+          </div>
+          <div className="home-stats__divider" aria-hidden="true" />
+          <div className="home-stats__item">
+            <span className="home-stats__value">6</span>
+            <span className="home-stats__label">Categories</span>
+          </div>
+          <div className="home-stats__divider" aria-hidden="true" />
+          <div className="home-stats__item">
+            <span className="home-stats__value">4.6★</span>
+            <span className="home-stats__label">Avg. Rating</span>
+          </div>
+          <div className="home-stats__divider" aria-hidden="true" />
+          <div className="home-stats__item">
+            <span className="home-stats__value">COD</span>
+            <span className="home-stats__label">Cash on Delivery</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Shop by Category ── */}
       <Categories />
+
+      {/* ── Featured Products ── */}
       <section className="featured">
-        <h2 className="section-title">Featured Products</h2>
+        <div className="featured__header">
+          <h2 className="section-title">Featured Products</h2>
+          <p className="featured__sub">
+            Hand-picked from our latest inventory
+          </p>
+        </div>
+
         {featured.length === 0 ? (
-          <p>No products found in database.</p>
+          <div className="featured__empty">
+            <p>No products found. Check back soon.</p>
+          </div>
         ) : (
           <div className="product-grid">
             {featured.map((product) => (
@@ -50,6 +94,21 @@ export default async function HomePage() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* ── CTA Banner ── */}
+      <section className="home-cta">
+        <div className="home-cta__inner">
+          <div className="home-cta__glow" aria-hidden="true" />
+          <p className="home-cta__label">Ready to upgrade?</p>
+          <h2 className="home-cta__title">The future of tech is here.</h2>
+          <p className="home-cta__sub">
+            Browse our full catalog of phones, laptops, gaming gear and more.
+          </p>
+          <a href="/products" className="btn btn--primary home-cta__btn">
+            Explore All Products
+          </a>
+        </div>
       </section>
     </>
   );

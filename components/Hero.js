@@ -7,7 +7,7 @@ const HERO_IMAGE =
   'https://images.pexels.com/photos/986774/pexels-photo-986774.jpeg?auto=compress&cs=tinysrgb&w=1600';
 
 export default function Hero() {
-  const imageRef = useRef(null);
+  const imageRef   = useRef(null);
   const sectionRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -16,21 +16,21 @@ export default function Hero() {
   // parallaxes upward and fades — giving the hero real depth as you scroll.
   useEffect(() => {
     const section = sectionRef.current;
-    const image = imageRef.current;
+    const image   = imageRef.current;
     const content = contentRef.current;
     if (!section || !image) return;
 
     let ticking = false;
 
     const update = () => {
-      const rect = section.getBoundingClientRect();
+      const rect     = section.getBoundingClientRect();
       const progress = Math.min(Math.max(-rect.top / rect.height, 0), 1);
-      const scale = 1 + progress * 0.22;
-      const tilt = progress * 4;
+      const scale    = 1 + progress * 0.22;
+      const tilt     = progress * 4;
       image.style.transform = `perspective(1000px) scale(${scale}) rotateX(${tilt}deg)`;
       if (content) {
         content.style.transform = `translateY(${progress * 40}px)`;
-        content.style.opacity = String(1 - progress * 0.9);
+        content.style.opacity   = String(1 - progress * 0.9);
       }
       ticking = false;
     };
@@ -49,20 +49,35 @@ export default function Hero() {
 
   return (
     <section className="hero" ref={sectionRef}>
+      {/* Background image with parallax */}
       <div className="hero__image-wrap">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img ref={imageRef} src={HERO_IMAGE} alt="" className="hero__image" />
       </div>
+
+      {/* Overlays */}
       <div className="hero__overlay" />
+      <div className="hero__grid" aria-hidden="true" />
       <span className="hero__glow hero__glow--a" />
       <span className="hero__glow hero__glow--b" />
 
+      {/* Content */}
       <div className="hero__content" ref={contentRef}>
-        <span className="hero__badge">✦ New season, new tech</span>
-        <h1 className="hero__title">Tech that moves you forward</h1>
+        <span className="hero__badge">
+          <span style={{ color: 'var(--cyan)', fontSize: '10px' }}>✦</span>
+          &nbsp;2026 Collection — Now Live
+        </span>
+
+        <h1 className="hero__title">
+          Tech that moves<br />
+          <em>you forward</em>
+        </h1>
+
         <p className="hero__subtitle">
-          Phones, laptops, gaming gear, and accessories — all in one place.
+          Phones, laptops, gaming gear, and accessories —<br />
+          all curated for the next generation of makers.
         </p>
+
         <div className="hero__cta-row">
           <Link href="/products" className="btn btn--primary hero__cta">
             Shop Now
@@ -71,8 +86,27 @@ export default function Hero() {
             Learn More →
           </Link>
         </div>
+
+        {/* Trust badges */}
+        <div className="hero__trust">
+          <span className="hero__trust-item">
+            <span className="hero__trust-dot" />
+            Free Shipping $100+
+          </span>
+          <span className="hero__trust-sep" aria-hidden="true">·</span>
+          <span className="hero__trust-item">
+            <span className="hero__trust-dot" />
+            Cash on Delivery
+          </span>
+          <span className="hero__trust-sep" aria-hidden="true">·</span>
+          <span className="hero__trust-item">
+            <span className="hero__trust-dot" />
+            Easy Returns
+          </span>
+        </div>
       </div>
 
+      {/* Scroll indicator */}
       <div className="hero__scroll-hint" aria-hidden="true">
         <span className="hero__scroll-dot" />
       </div>
