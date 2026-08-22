@@ -9,11 +9,11 @@ export default function IntroLoader() {
   useEffect(() => {
     // Check if intro has already been played in this browser session
     try {
-      const alreadyPlayed = sessionStorage.getItem('technest_intro_played');
+      const alreadyPlayed = sessionStorage.getItem('technest_intro_v3');
       if (alreadyPlayed === 'true') {
         return; // Exit without showing preloader
       }
-      sessionStorage.setItem('technest_intro_played', 'true');
+      sessionStorage.setItem('technest_intro_v3', 'true');
     } catch {
       // Ignore sessionStorage exceptions
     }
