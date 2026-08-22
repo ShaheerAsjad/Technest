@@ -228,17 +228,26 @@ export default function ParticleHero() {
       });
       sunGroup.position.y = -20 + Math.sin(time * 0.6) * 0.3;
 
-      /* — Enhanced 3D Parallax on Mouse Movement — */
-      camera.position.x += (mouseRef.current.x * 16 - camera.position.x) * 0.06;
-      camera.position.y += (mouseRef.current.y * 10 + scrollRef.current * 0.01 - camera.position.y) * 0.06;
+      /* — High-Sensitivity 3D Parallax on Mouse Movement — */
+      const targetCamX = mouseRef.current.x * 28;
+      const targetCamY = mouseRef.current.y * 18 + scrollRef.current * 0.015;
+
+      camera.position.x += (targetCamX - camera.position.x) * 0.1;
+      camera.position.y += (targetCamY - camera.position.y) * 0.1;
       
-      // Subtle 3D tilt of the scene
-      scene.rotation.y = mouseRef.current.x * 0.12;
-      scene.rotation.x = -mouseRef.current.y * 0.08;
+      // Dynamic 3D rotation tilt of scene objects
+      pointCloud.rotation.y = mouseRef.current.x * 0.4;
+      pointCloud.rotation.x = -mouseRef.current.y * 0.3;
+
+      lineSegments.rotation.y = mouseRef.current.x * 0.4;
+      lineSegments.rotation.x = -mouseRef.current.y * 0.3;
+
+      sunGroup.position.x = mouseRef.current.x * 12;
+      sunGroup.position.y = -20 + Math.sin(time * 0.6) * 0.3 + mouseRef.current.y * 8;
 
       camera.lookAt(0, 0, 0);
 
-      gridHelper.position.x = -camera.position.x * 0.3;
+      gridHelper.position.x = -camera.position.x * 0.4;
 
       renderer.render(scene, camera);
     };

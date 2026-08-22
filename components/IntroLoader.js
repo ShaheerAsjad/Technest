@@ -1,24 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 
 export default function IntroLoader() {
   const [visible, setVisible] = useState(false);
   const [stage, setStage] = useState('drawing');
-  const pathname = usePathname();
 
   useEffect(() => {
-    // Only run intro animation on main home page ('/')
-    if (pathname !== '/') return;
-
     // Check if intro has already played in this browser session
-    const hasLoaded = sessionStorage.getItem('technest_intro_played');
-    if (hasLoaded) return;
+    try {
+      const hasLoaded = sessionStorage.getItem('technest_intro_played');
+      if (hasLoaded) return;
+      sessionStorage.setItem('technest_intro_played', 'true');
+    } catch {
+      // Ignore sessionStorage issues
+    }
 
-    // Trigger preloader on initial home load
+    // Trigger preloader
     setVisible(true);
-    sessionStorage.setItem('technest_intro_played', 'true');
     document.body.style.overflow = 'hidden';
 
     const popTimer = setTimeout(() => setStage('popping'), 2200);
@@ -34,7 +33,7 @@ export default function IntroLoader() {
       clearTimeout(hideTimer);
       document.body.style.overflow = '';
     };
-  }, [pathname]);
+  }, []);
 
   if (!visible) return null;
 

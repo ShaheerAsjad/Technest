@@ -1,4 +1,5 @@
 import Hero from '@/components/Hero';
+import IntroLoader from '@/components/IntroLoader';
 import Categories from '@/components/Categories';
 import ProductCard from '@/components/ProductCard';
 import sql from '@/lib/db';
@@ -43,6 +44,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <IntroLoader />
       {/* ── Cinematic Hero ── */}
       <Hero />
 
