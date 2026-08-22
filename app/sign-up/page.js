@@ -1,9 +1,6 @@
-import Link from 'next/link';
+'use client';
 
-export const metadata = {
-  title: 'Sign Up — TechNest',
-  description: 'Create your TechNest account.',
-};
+import Link from 'next/link';
 
 export default function SignUpPage() {
   return (
