@@ -3,23 +3,14 @@
 import { useEffect, useState } from 'react';
 
 export default function IntroLoader() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [stage, setStage] = useState('drawing');
 
   useEffect(() => {
-    // Check if intro has already played in this browser session
-    try {
-      const hasLoaded = sessionStorage.getItem('technest_intro_played');
-      if (hasLoaded) return;
-      sessionStorage.setItem('technest_intro_played', 'true');
-    } catch {
-      // Ignore sessionStorage issues
-    }
-
-    // Trigger preloader
-    setVisible(true);
+    // Hide scrolling during intro animation
     document.body.style.overflow = 'hidden';
 
+    // Intro Animation Timeline
     const popTimer = setTimeout(() => setStage('popping'), 2200);
     const fadeTimer = setTimeout(() => setStage('fading'), 3200);
     const hideTimer = setTimeout(() => {
