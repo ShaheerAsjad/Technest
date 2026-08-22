@@ -33,7 +33,7 @@ export default function ParticleHero() {
     camera.position.set(0, 0, 38);
 
     /* ─────────────────────────────────────────────────────────────
-       PARTICLES & CONNECTIONS (Neon Orange theme)
+        PARTICLES & CONNECTIONS (Neon Orange theme)
     ───────────────────────────────────────────────────────────── */
     const particlePositions = [];
     const particleVelocities = [];
@@ -59,7 +59,7 @@ export default function ParticleHero() {
     const ptGeometry = new THREE.BufferGeometry();
     const ptPositions = new Float32Array(PARTICLE_COUNT * 3);
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      ptPositions[i * 3]     = particlePositions[i].x;
+      ptPositions[i * 3] = particlePositions[i].x;
       ptPositions[i * 3 + 1] = particlePositions[i].y;
       ptPositions[i * 3 + 2] = particlePositions[i].z;
     }
@@ -91,9 +91,8 @@ export default function ParticleHero() {
     scene.add(lineSegments);
 
     /* ─────────────────────────────────────────────────────────────
-       NEON ORANGE SUN ARC
+        NEON ORANGE SUN ARC
     ───────────────────────────────────────────────────────────── */
-    // Layered glow spheres — bloom-like without post-processing
     const sunGroup = new THREE.Group();
     sunGroup.position.set(0, -20, -10);
 
@@ -103,19 +102,17 @@ export default function ParticleHero() {
       return new THREE.Mesh(g, m);
     };
 
-    sunGroup.add(createGlowSphere(9.5,  0xFF2200, 0.04));   // outer aura
-    sunGroup.add(createGlowSphere(8,    0xFF3300, 0.08));   // mid glow
-    sunGroup.add(createGlowSphere(6.2,  0xFF4500, 0.15));   // inner glow
-    sunGroup.add(createGlowSphere(4.5,  0xFF6600, 0.35));   // core
+    sunGroup.add(createGlowSphere(9.5, 0xFF2200, 0.04));   // outer aura
+    sunGroup.add(createGlowSphere(8, 0xFF3300, 0.08));   // mid glow
+    sunGroup.add(createGlowSphere(6.2, 0xFF4500, 0.15));   // inner glow
+    sunGroup.add(createGlowSphere(4.5, 0xFF6600, 0.35));   // core
 
-    // Horizon arc (the bright curved line at the top of the sun)
     const arcGeo = new THREE.TorusGeometry(10, 0.07, 12, 240, Math.PI);
     const arcMat = new THREE.MeshBasicMaterial({ color: 0xFF8800, transparent: true, opacity: 0.95 });
     const arc = new THREE.Mesh(arcGeo, arcMat);
-    arc.rotation.z = Math.PI; // flip so the arc faces upward
+    arc.rotation.z = Math.PI;
     sunGroup.add(arc);
 
-    // Second thicker arc for glow thickness
     const arcGeo2 = new THREE.TorusGeometry(10, 0.22, 8, 240, Math.PI);
     const arcMat2 = new THREE.MeshBasicMaterial({ color: 0xFF4500, transparent: true, opacity: 0.25 });
     const arc2 = new THREE.Mesh(arcGeo2, arcMat2);
@@ -125,34 +122,34 @@ export default function ParticleHero() {
     scene.add(sunGroup);
 
     /* ─────────────────────────────────────────────────────────────
-       GRID FLOOR (subtle)
+        GRID FLOOR
     ───────────────────────────────────────────────────────────── */
-    const gridHelper = new THREE.GridHelper(100, 28, 0x1f0b00, 0x140500); // Reddish-orange dark tint
+    const gridHelper = new THREE.GridHelper(100, 28, 0x1f0b00, 0x140500);
     gridHelper.position.y = -18;
     gridHelper.material.transparent = true;
     gridHelper.material.opacity = 0.45;
     scene.add(gridHelper);
 
     /* ─────────────────────────────────────────────────────────────
-       AMBIENT SMALL STARS
+        AMBIENT SMALL STARS
     ───────────────────────────────────────────────────────────── */
     const starCount = 200;
     const starGeo = new THREE.BufferGeometry();
     const starPos = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
-      starPos[i * 3]     = (Math.random() - 0.5) * 200;
+      starPos[i * 3] = (Math.random() - 0.5) * 200;
       starPos[i * 3 + 1] = (Math.random() - 0.5) * 120;
       starPos[i * 3 + 2] = (Math.random() - 0.5) * 80 - 30;
     }
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-    const starMat = new THREE.PointsMaterial({ color: 0xffa07a, size: 0.12, transparent: true, opacity: 0.5 }); // Light salmon stars
+    const starMat = new THREE.PointsMaterial({ color: 0xffa07a, size: 0.12, transparent: true, opacity: 0.5 });
     scene.add(new THREE.Points(starGeo, starMat));
 
     /* ─────────────────────────────────────────────────────────────
-       EVENT LISTENERS
+        EVENT LISTENERS
     ───────────────────────────────────────────────────────────── */
     const onMouseMove = (e) => {
-      mouseRef.current.x = (e.clientX / window.innerWidth  - 0.5) * 2;
+      mouseRef.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
       mouseRef.current.y = -(e.clientY / window.innerHeight - 0.5) * 2;
     };
     const onScroll = () => {
@@ -168,11 +165,11 @@ export default function ParticleHero() {
     };
 
     window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('scroll',    onScroll,    { passive: true });
-    window.addEventListener('resize',    onResize);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
 
     /* ─────────────────────────────────────────────────────────────
-       ANIMATION LOOP
+        ANIMATION LOOP
     ───────────────────────────────────────────────────────────── */
     let time = 0;
 
@@ -180,22 +177,19 @@ export default function ParticleHero() {
       frameRef.current = requestAnimationFrame(animate);
       time += 0.008;
 
-      /* — Update particle positions — */
       const posArr = pointCloud.geometry.attributes.position.array;
       for (let i = 0; i < PARTICLE_COUNT; i++) {
         particlePositions[i].add(particleVelocities[i]);
 
-        // Soft boundary bounce
         if (Math.abs(particlePositions[i].x) > 35) particleVelocities[i].x *= -1;
         if (Math.abs(particlePositions[i].y - 4) > 20) particleVelocities[i].y *= -1;
 
-        posArr[i * 3]     = particlePositions[i].x;
+        posArr[i * 3] = particlePositions[i].x;
         posArr[i * 3 + 1] = particlePositions[i].y;
         posArr[i * 3 + 2] = particlePositions[i].z;
       }
       pointCloud.geometry.attributes.position.needsUpdate = true;
 
-      /* — Rebuild connection lines — */
       let lineVertCount = 0;
       const linePosArr = lineSegments.geometry.attributes.position.array;
       const connectionCount = new Array(PARTICLE_COUNT).fill(0);
@@ -210,7 +204,7 @@ export default function ParticleHero() {
           const dist = particlePositions[i].distanceTo(particlePositions[j]);
           if (dist < CONNECTION_DISTANCE) {
             const idx = lineVertCount * 3;
-            linePosArr[idx]     = particlePositions[i].x;
+            linePosArr[idx] = particlePositions[i].x;
             linePosArr[idx + 1] = particlePositions[i].y;
             linePosArr[idx + 2] = particlePositions[i].z;
             linePosArr[idx + 3] = particlePositions[j].x;
@@ -225,7 +219,6 @@ export default function ParticleHero() {
       lineSegments.geometry.attributes.position.needsUpdate = true;
       lineSegments.geometry.setDrawRange(0, lineVertCount);
 
-      /* — Sun pulse — */
       const pulse = 0.85 + Math.sin(time * 1.8) * 0.15;
       sunGroup.children.forEach((child, idx) => {
         if (child.material) {
@@ -235,12 +228,16 @@ export default function ParticleHero() {
       });
       sunGroup.position.y = -20 + Math.sin(time * 0.6) * 0.3;
 
-      /* — Camera parallax on mouse — */
-      camera.position.x += (mouseRef.current.x * 4 - camera.position.x) * 0.04;
-      camera.position.y += (mouseRef.current.y * 2 + scrollRef.current * 0.012 - camera.position.y) * 0.04;
+      /* — Enhanced 3D Parallax on Mouse Movement — */
+      camera.position.x += (mouseRef.current.x * 16 - camera.position.x) * 0.06;
+      camera.position.y += (mouseRef.current.y * 10 + scrollRef.current * 0.01 - camera.position.y) * 0.06;
+      
+      // Subtle 3D tilt of the scene
+      scene.rotation.y = mouseRef.current.x * 0.12;
+      scene.rotation.x = -mouseRef.current.y * 0.08;
+
       camera.lookAt(0, 0, 0);
 
-      /* — Grid parallax — */
       gridHelper.position.x = -camera.position.x * 0.3;
 
       renderer.render(scene, camera);
@@ -248,12 +245,11 @@ export default function ParticleHero() {
 
     animate();
 
-    /* ── Cleanup ── */
     return () => {
       cancelAnimationFrame(frameRef.current);
       window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('scroll',    onScroll);
-      window.removeEventListener('resize',    onResize);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onResize);
       renderer.dispose();
       ptGeometry.dispose();
       ptMaterial.dispose();
