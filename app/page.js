@@ -83,9 +83,9 @@ export default async function HomePage() {
           <p className="home-cta__sub">
             Browse our full catalog of phones, laptops, gaming gear and more.
           </p>
-          <a href="/products" className="btn btn--primary home-cta__btn">
+          <Link href="/products" className="btn btn--primary home-cta__btn">
             Explore All Products
-          </a>
+          </Link>
         </div>
       </section>
     </>

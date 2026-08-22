@@ -3,20 +3,31 @@
 import { useEffect, useState } from 'react';
 
 export default function IntroLoader() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [stage, setStage] = useState('drawing');
 
   useEffect(() => {
-    // Hide scrolling during intro animation
+    // Check if intro has already been played in this browser session
+    try {
+      const alreadyPlayed = sessionStorage.getItem('technest_intro_played');
+      if (alreadyPlayed === 'true') {
+        return; // Exit without showing preloader
+      }
+      sessionStorage.setItem('technest_intro_played', 'true');
+    } catch {
+      // Ignore sessionStorage exceptions
+    }
+
+    // First time in session -> show preloader
+    setVisible(true);
     document.body.style.overflow = 'hidden';
 
-    // Intro Animation Timeline
-    const popTimer = setTimeout(() => setStage('popping'), 2200);
-    const fadeTimer = setTimeout(() => setStage('fading'), 3200);
+    const popTimer = setTimeout(() => setStage('popping'), 2000);
+    const fadeTimer = setTimeout(() => setStage('fading'), 3000);
     const hideTimer = setTimeout(() => {
       setVisible(false);
       document.body.style.overflow = '';
-    }, 4000);
+    }, 3600);
 
     return () => {
       clearTimeout(popTimer);
