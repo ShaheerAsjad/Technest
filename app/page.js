@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import Hero from '@/components/Hero';
 import IntroLoader from '@/components/IntroLoader';
 import Categories from '@/components/Categories';
