@@ -2,10 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-// Bumping this key means any "already played" flag left over from
-// earlier testing sessions is ignored — the intro will show fresh
-// the next time this code ships, regardless of old sessionStorage
-// state in your browser.
 const SESSION_KEY = 'technest_intro_v7';
 
 export default function IntroLoader() {
@@ -14,10 +10,6 @@ export default function IntroLoader() {
   const startedRef = useRef(false);
 
   useEffect(() => {
-    // React Strict Mode (development only) invokes effects twice in a
-    // row. startedRef persists across both invocations of the SAME
-    // component instance, so only the first invocation actually runs
-    // the logic below — the second is a harmless no-op.
     if (startedRef.current) return;
     startedRef.current = true;
 
@@ -37,14 +29,11 @@ export default function IntroLoader() {
     }
 
     setVisible(true);
-    document.body.style.overflow = 'hidden';
 
-    // Timeline: rings + logo animate in (CSS handles this on mount),
-    // hold for a beat, then fade the whole overlay out.
+    // Timeline: Play intro animation and gracefully exit without locking body scroll
     setTimeout(() => setStage('out'), 1900);
     setTimeout(() => {
       setVisible(false);
-      document.body.style.overflow = '';
     }, 2500);
   }, []);
 
