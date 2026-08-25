@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ProductCard from '@/components/ProductCard';
+import ProductSkeleton from '@/components/ProductSkeleton';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -12,6 +13,8 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [sortBy, setSortBy] = useState('default');
+  const [maxPrice, setMaxPrice] = useState(null);
+  const [priceCeiling, setPriceCeiling] = useState(2000);
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,6 +30,12 @@ export default function ProductsPage() {
           const list = Array.isArray(data) ? data : [];
           setProducts(list);
           setFilteredProducts(list);
+          if (list.length > 0) {
+            const highest = Math.max(...list.map((p) => Number(p.price) || 0));
+            const ceiling = Math.ceil(highest / 100) * 100 || 2000;
+            setPriceCeiling(ceiling);
+            setMaxPrice(ceiling);
+          }
         }
       } catch (err) {
         console.error("Fetch Error:", err);
@@ -53,6 +62,10 @@ export default function ProductsPage() {
       );
     }
 
+    if (maxPrice !== null) {
+      result = result.filter((p) => Number(p.price) <= maxPrice);
+    }
+
     if (sortBy === 'low-high') {
       result.sort((a, b) => Number(a.price) - Number(b.price));
     } else if (sortBy === 'high-low') {
@@ -61,7 +74,7 @@ export default function ProductsPage() {
 
     setFilteredProducts(result);
     setCurrentPage(1); // Reset to page 1 on search/filter change
-  }, [searchTerm, selectedCategory, sortBy, products]);
+  }, [searchTerm, selectedCategory, sortBy, maxPrice, products]);
 
   // Categories list
   const categories = [
@@ -75,9 +88,8 @@ export default function ProductsPage() {
   if (loading) {
     return (
       <div className="catalog-page">
-        <div className="container py-8 text-center">
-          <div className="catalog-spinner" aria-hidden="true" />
-          <p className="catalog-loading-text">Loading Products…</p>
+        <div className="container py-8">
+          <ProductSkeleton count={8} />
         </div>
       </div>
     );
@@ -134,6 +146,22 @@ export default function ProductsPage() {
               <option value="low-high">Price: Low to High</option>
               <option value="high-low">Price: High to Low</option>
             </select>
+
+            <div className="catalog-price-filter">
+              <label htmlFor="price-range" className="catalog-price-filter__label">
+                Up to ${maxPrice ?? priceCeiling}
+              </label>
+              <input
+                id="price-range"
+                type="range"
+                min="0"
+                max={priceCeiling}
+                step="10"
+                value={maxPrice ?? priceCeiling}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                className="catalog-price-filter__slider"
+              />
+            </div>
           </div>
         </div>
 
@@ -141,7 +169,7 @@ export default function ProductsPage() {
         {filteredProducts.length === 0 ? (
           <div className="catalog-empty">
             <p className="catalog-empty__text">No products found matching your criteria.</p>
-            <button className="btn btn--ghost mt-4" onClick={() => { setSearchTerm(''); setSelectedCategory('All Categories'); setSortBy('default'); }}>
+            <button className="btn btn--ghost mt-4" onClick={() => { setSearchTerm(''); setSelectedCategory('All Categories'); setSortBy('default'); setMaxPrice(priceCeiling); }}>
               Clear Filters
             </button>
           </div>

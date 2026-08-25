@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import DropCountdown from './DropCountdown';
 
 // Three.js canvas — client-side only, no SSR
 const ParticleHero = dynamic(() => import('./ParticleHero'), {
@@ -66,6 +67,8 @@ export default function Hero() {
           <span style={{ color: '#FF6600', fontSize: '10px' }}>✦</span>
           &nbsp;TechNest Exclusive Drops
         </span>
+
+        <DropCountdown />
 
         <h1 className="hero__title">
           Next-Gen Tech<br />

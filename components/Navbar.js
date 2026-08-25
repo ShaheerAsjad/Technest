@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import LoyaltyBadge from './LoyaltyBadge';
 
 /* ─── Inline SVG icons ─── */
 function IconCart({ size = 18 }) {
@@ -44,6 +45,15 @@ function IconMoon({ size = 15 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  );
+}
+
+function IconSearch({ size = 17 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
     </svg>
   );
 }
@@ -116,6 +126,16 @@ export default function Navbar() {
           <span />
         </button>
 
+        {/* Search / Command Palette trigger */}
+        <button
+          className="navbar__search-btn"
+          onClick={() => window.dispatchEvent(new Event('technest:open-search'))}
+          aria-label="Search (Ctrl+K)"
+        >
+          <IconSearch size={17} />
+          <kbd className="navbar__search-kbd">⌘K</kbd>
+        </button>
+
         {/* Theme toggle */}
         <button className="navbar__theme-btn" onClick={toggleTheme} aria-label="Toggle colour mode">
           {theme === 'dark' ? <IconSun /> : <IconMoon />}
@@ -146,7 +166,10 @@ export default function Navbar() {
         {/* Auth */}
         {isLoaded && (
           isSignedIn ? (
-            <UserButton />
+            <>
+              <LoyaltyBadge />
+              <UserButton />
+            </>
           ) : (
             <Link href="/sign-in" className="navbar__signin-btn">
               Sign In

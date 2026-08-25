@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BackToTop from '@/components/BackToTop';
 import AmbientGlow from '@/components/AmbientGlow';
+import CommandPalette from '@/components/CommandPalette';
 import Providers from './providers';
 
 export const metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({ children }) {
           <Providers>
             <AmbientGlow />
             <Navbar />
+            <CommandPalette />
             <main id="page-root">{children}</main>
             <Footer />
             <BackToTop />

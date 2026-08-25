@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import QuickView from './QuickView';
+import NotifyMeForm from './NotifyMeForm';
 
 export default function ProductCard({ product }) {
   // ── Business logic — DO NOT MODIFY ───────────────────────────
@@ -14,6 +16,7 @@ export default function ProductCard({ product }) {
 
   const cardRef = useRef(null);
   const [visible, setVisible] = useState(false);
+  const [quickViewOpen, setQuickViewOpen] = useState(false);
 
   // Scroll-triggered 3D reveal: card fades up into place the first
   // time it enters the viewport.
@@ -98,6 +101,22 @@ export default function ProductCard({ product }) {
         {wishlisted ? '♥' : '♡'}
       </button>
 
+      {/* Quick View trigger */}
+      {!isOutOfStock && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setQuickViewOpen(true);
+          }}
+          className="product-card-3d__quickview-btn"
+          aria-label="Quick view"
+        >
+          👁
+        </button>
+      )}
+
       {/* Product image */}
       <Link href={`/products/${product.id}`} className="product-card-3d__image-wrap">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -133,17 +152,30 @@ export default function ProductCard({ product }) {
             </span>
           )}
         </div>
+
+        {!isOutOfStock && product.stock <= 5 && (
+          <span className="product-card-3d__urgency">
+            🔥 Only {product.stock} left
+          </span>
+        )}
       </div>
 
-      {/* Add to cart */}
-      <button
-        type="button"
-        onClick={() => addToCart(product.id, 1)}
-        disabled={isOutOfStock}
-        className="btn btn--primary product-card-3d__add-btn"
-      >
-        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-      </button>
+      {/* Add to cart / Notify Me */}
+      {isOutOfStock ? (
+        <NotifyMeForm productId={product.id} compact />
+      ) : (
+        <button
+          type="button"
+          onClick={() => addToCart(product.id, 1)}
+          className="btn btn--primary product-card-3d__add-btn"
+        >
+          Add to Cart
+        </button>
+      )}
+
+      {quickViewOpen && (
+        <QuickView product={product} onClose={() => setQuickViewOpen(false)} />
+      )}
     </div>
   );
 }

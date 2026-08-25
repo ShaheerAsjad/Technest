@@ -6,6 +6,8 @@ import { useParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { formatPrice, renderStars } from '@/lib/format';
 import ProductCard from '@/components/ProductCard';
+import ReviewsSection from '@/components/ReviewsSection';
+import FrequentlyBoughtTogether from '@/components/FrequentlyBoughtTogether';
 
 const RECENT_KEY = 'technest_recently_viewed';
 
@@ -194,6 +196,11 @@ export default function ProductDetailsPage() {
         </div>
       </div>
 
+      {/* ── Frequently Bought Together ── */}
+      <div className="mt-12">
+        <FrequentlyBoughtTogether product={product} allProducts={allProducts} />
+      </div>
+
       {/* ── Related Products ── */}
       {related.length > 0 && (
         <div className="mt-12">
@@ -221,6 +228,11 @@ export default function ProductDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* ── Reviews ── */}
+      <div className="mt-12">
+        <ReviewsSection productId={product.id} />
+      </div>
     </div>
   );
 }
