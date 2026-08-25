@@ -166,12 +166,12 @@ export default function Navbar() {
         {/* Auth */}
         {isLoaded && (
           isSignedIn ? (
-            <>
+            <div className="navbar__auth-desktop">
               <LoyaltyBadge />
               <UserButton />
-            </>
+            </div>
           ) : (
-            <Link href="/sign-in" className="navbar__signin-btn">
+            <Link href="/sign-in" className="navbar__signin-btn navbar__auth-desktop">
               Sign In
             </Link>
           )
@@ -188,10 +188,34 @@ export default function Navbar() {
           <Link href="/about"          className="navbar__link" onClick={closeMenu}>About</Link>
           <Link href="/contact"        className="navbar__link" onClick={closeMenu}>Contact</Link>
 
+          <div className="navbar__mobile-menu-divider" />
+
+          <button
+            className="navbar__mobile-menu-row"
+            onClick={() => { window.dispatchEvent(new Event('technest:open-search')); closeMenu(); }}
+          >
+            <IconSearch size={17} />
+            <span>Search</span>
+          </button>
+
+          <Link href="/wishlist" className="navbar__mobile-menu-row" onClick={closeMenu}>
+            <IconHeart size={17} />
+            <span>Wishlist</span>
+            {wishlistCount > 0 && <span className="navbar__badge navbar__badge--inline">{wishlistCount}</span>}
+          </Link>
+
+          <button className="navbar__mobile-menu-row" onClick={toggleTheme}>
+            {theme === 'dark' ? <IconSun size={17} /> : <IconMoon size={17} />}
+            <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
+
           <div className="navbar__mobile-menu-auth">
             {isLoaded && (
               isSignedIn ? (
-                <UserButton />
+                <>
+                  <LoyaltyBadge />
+                  <UserButton />
+                </>
               ) : (
                 <Link href="/sign-in" className="navbar__signin-btn" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={closeMenu}>
                   Sign In
