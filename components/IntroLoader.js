@@ -57,16 +57,59 @@ export default function IntroLoader() {
       <div className="intro2__grid" aria-hidden="true" />
 
       <svg className="intro2__circuit" viewBox="0 0 400 400" aria-hidden="true">
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-          <line
-            key={angle}
-            x1={200 + Math.cos((angle * Math.PI) / 180) * 190}
-            y1={200 + Math.sin((angle * Math.PI) / 180) * 190}
-            x2="200"
-            y2="200"
-            className="intro2__circuit-line"
-            style={{ animationDelay: `${i * 0.12}s` }}
-          />
+        <defs>
+          <pattern id="intro2PcbPattern" width="22" height="22" patternUnits="userSpaceOnUse">
+            <path d="M 22 0 L 0 0 0 22" className="intro2__pcb-grid" />
+          </pattern>
+        </defs>
+
+        {/* ── Fine PCB grid texture across the whole board ── */}
+        <rect x="0" y="0" width="400" height="400" fill="url(#intro2PcbPattern)" />
+        {/* ── PCB traces: right-angle paths carrying a glowing pulse
+             inward from the edges toward the core ── */}
+        <g className="intro2__traces">
+          <path className="intro2__trace" style={{ animationDelay: '0s' }}
+                d="M20,70 L20,150 L92,150 L140,182" />
+          <path className="intro2__trace" style={{ animationDelay: '0.35s' }}
+                d="M380,90 L380,160 L308,160 L260,184" />
+          <path className="intro2__trace" style={{ animationDelay: '0.7s' }}
+                d="M30,330 L104,330 L104,255 L152,222" />
+          <path className="intro2__trace" style={{ animationDelay: '1.05s' }}
+                d="M372,315 L296,315 L296,248 L248,220" />
+          <path className="intro2__trace" style={{ animationDelay: '1.4s' }}
+                d="M200,16 L200,95 L200,140" />
+          <path className="intro2__trace" style={{ animationDelay: '1.75s' }}
+                d="M200,384 L200,305 L200,262" />
+        </g>
+
+        {/* ── Pads / vias at trace bends & endpoints ── */}
+        {[
+          [20, 70], [20, 150], [92, 150],
+          [380, 90], [380, 160], [308, 160],
+          [30, 330], [104, 330], [104, 255],
+          [372, 315], [296, 315], [296, 248],
+          [200, 16], [200, 95],
+          [200, 384], [200, 305],
+        ].map(([cx, cy], i) => (
+          <circle key={i} cx={cx} cy={cy} r="3" className="intro2__pad" />
+        ))}
+
+        {/* ── IC chip rectangles (purely decorative PCB detail) ── */}
+        {[
+          { x: 4,   y: 52,  w: 34, h: 22 },
+          { x: 362, y: 72,  w: 34, h: 22 },
+          { x: 8,   y: 312, w: 34, h: 22 },
+          { x: 358, y: 297, w: 34, h: 22 },
+        ].map((c, i) => (
+          <g key={i} className="intro2__chip">
+            <rect x={c.x} y={c.y} width={c.w} height={c.h} rx="2" />
+            <line x1={c.x + 6}  y1={c.y} x2={c.x + 6}  y2={c.y - 6} />
+            <line x1={c.x + 16} y1={c.y} x2={c.x + 16} y2={c.y - 6} />
+            <line x1={c.x + 26} y1={c.y} x2={c.x + 26} y2={c.y - 6} />
+            <line x1={c.x + 6}  y1={c.y + c.h} x2={c.x + 6}  y2={c.y + c.h + 6} />
+            <line x1={c.x + 16} y1={c.y + c.h} x2={c.x + 16} y2={c.y + c.h + 6} />
+            <line x1={c.x + 26} y1={c.y + c.h} x2={c.x + 26} y2={c.y + c.h + 6} />
+          </g>
         ))}
       </svg>
 

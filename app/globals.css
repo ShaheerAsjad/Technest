@@ -783,23 +783,67 @@ button, input, select, textarea {
 
 .intro2__circuit {
   position: absolute;
-  width: min(80vw, 520px);
-  height: min(80vw, 520px);
+  width: min(80vw, 480px);
+  height: min(80vw, 480px);
   overflow: visible;
 }
 
-.intro2__circuit-line {
-  stroke: var(--cyan);
-  stroke-width: 1;
-  stroke-dasharray: 6 14;
-  opacity: 0.35;
-  animation: intro2CircuitFlow 1.6s linear infinite;
+/* Base trace — clearly visible circuit-board blue, not the faint
+   site-wide glass border (which is only 8% opacity and disappears
+   against the near-black background). */
+.intro2__trace {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.4);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-@keyframes intro2CircuitFlow {
-  0%   { stroke-dashoffset: 190; opacity: 0.15; }
-  50%  { opacity: 0.9; }
-  100% { stroke-dashoffset: 0; opacity: 0.15; }
+/* The traveling glow — a short bright dash animated along the exact
+   same path, moving from the edge (dashoffset = full length) to the
+   center (dashoffset = 0), i.e. flowing inward toward the core. */
+.intro2__trace::before {
+  content: '';
+}
+
+.intro2__traces path.intro2__trace {
+  stroke-dasharray: 14 400;
+  animation: intro2TraceFlow 2.6s ease-in-out infinite;
+}
+
+.intro2__traces {
+  filter: drop-shadow(0 0 4px rgba(120, 220, 255, 0.7));
+}
+
+@keyframes intro2TraceFlow {
+  0%   { stroke-dashoffset: 400; stroke: rgba(56, 189, 248, 0.4); stroke-width: 1.6; }
+  8%   { stroke: #baf1ff; stroke-width: 2.4; }
+  55%  { stroke: #baf1ff; stroke-width: 2.4; }
+  65%  { stroke-dashoffset: 0; stroke: rgba(56, 189, 248, 0.4); stroke-width: 1.6; }
+  100% { stroke-dashoffset: 0; stroke: rgba(56, 189, 248, 0.4); stroke-width: 1.6; }
+}
+
+.intro2__pad {
+  fill: var(--bg-base);
+  stroke: rgba(56, 189, 248, 0.55);
+  stroke-width: 1.4;
+}
+
+.intro2__chip rect {
+  fill: rgba(56, 189, 248, 0.06);
+  stroke: rgba(56, 189, 248, 0.45);
+  stroke-width: 1.2;
+}
+
+.intro2__chip line {
+  stroke: rgba(56, 189, 248, 0.45);
+  stroke-width: 1.2;
+}
+
+.intro2__pcb-grid {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.12);
+  stroke-width: 0.6;
 }
 
 .intro2__center {
