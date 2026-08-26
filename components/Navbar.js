@@ -58,6 +58,15 @@ function IconSearch({ size = 17 }) {
   );
 }
 
+function IconUser({ size = 17 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 21a8 8 0 1 0-16 0"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const { cartCount, wishlistCount, theme, toggleTheme } = useApp();
   const { isSignedIn, isLoaded } = useUser();
@@ -95,25 +104,7 @@ export default function Navbar() {
 
   return (
     <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
-      {/* ── Logo ── */}
-      <Link href="/" className="navbar__logo" onClick={closeMenu}>
-        <span className="navbar__logo-dot" aria-hidden="true" />
-        <span className="logo-tech">Tech</span>
-        <span className="logo-nest">Nest</span>
-      </Link>
-
-      {/* ── Desktop Links ── */}
-      <div className="navbar__links">
-        <Link href="/"              className="navbar__link">Home</Link>
-        <Link href="/products"      className="navbar__link">Products</Link>
-        <Link href="/my-orders"     className="navbar__link">My Orders</Link>
-        <Link href="/order-tracking" className="navbar__link navbar__link--track">Track Order</Link>
-        <Link href="/about"         className="navbar__link">About</Link>
-        <Link href="/contact"       className="navbar__link">Contact</Link>
-      </div>
-
-      {/* ── Right Actions ── */}
-      <div className="navbar__actions">
+      <div className="navbar__row navbar__row--top">
         {/* Hamburger */}
         <button
           className={`navbar__hamburger${menuOpen ? ' navbar__hamburger--open' : ''}`}
@@ -126,59 +117,102 @@ export default function Navbar() {
           <span />
         </button>
 
-        {/* Search / Command Palette trigger */}
-        <button
-          className="navbar__search-btn"
-          onClick={() => window.dispatchEvent(new Event('technest:open-search'))}
-          aria-label="Search (Ctrl+K)"
-        >
-          <IconSearch size={17} />
-          <kbd className="navbar__search-kbd">⌘K</kbd>
-        </button>
-
-        {/* Theme toggle */}
-        <button className="navbar__theme-btn" onClick={toggleTheme} aria-label="Toggle colour mode">
-          {theme === 'dark' ? <IconSun /> : <IconMoon />}
-        </button>
-
-        {/* Wishlist */}
-        <Link href="/wishlist" className="navbar__icon-link" aria-label={`Wishlist (${wishlistCount})`}>
-          <IconHeart size={18} className="navbar__icon-svg" />
-          <span className="navbar__icon-label">Wishlist</span>
-          {wishlistCount > 0 && (
-            <span className="navbar__badge" aria-live="polite">{wishlistCount}</span>
-          )}
+        {/* Logo */}
+        <Link href="/" className="navbar__logo" onClick={closeMenu}>
+          <span className="navbar__logo-dot" aria-hidden="true" />
+          <span className="logo-tech">Tech</span>
+          <span className="logo-nest">Nest</span>
         </Link>
 
-        {/* Cart */}
-        <Link
-          href="/cart"
-          className={`navbar__icon-link${bounce ? ' navbar__icon-link--bounce' : ''}`}
-          aria-label={`Cart (${cartCount} items)`}
-        >
-          <IconCart size={18} className="navbar__icon-svg" />
-          <span className="navbar__icon-label">Cart</span>
-          {cartCount > 0 && (
-            <span className="navbar__badge" aria-live="polite">{cartCount}</span>
-          )}
-        </Link>
+        {/* Desktop Links */}
+        <div className="navbar__links">
+          <Link href="/"              className="navbar__link">Home</Link>
+          <Link href="/products"      className="navbar__link">Products</Link>
+          <Link href="/my-orders"     className="navbar__link">My Orders</Link>
+          <Link href="/order-tracking" className="navbar__link navbar__link--track">Track Order</Link>
+          <Link href="/about"         className="navbar__link">About</Link>
+          <Link href="/contact"       className="navbar__link">Contact</Link>
+        </div>
 
-        {/* Auth */}
-        {isLoaded && (
-          isSignedIn ? (
-            <div className="navbar__auth-desktop">
-              <LoyaltyBadge />
-              <UserButton />
-            </div>
-          ) : (
-            <Link href="/sign-in" className="navbar__signin-btn navbar__auth-desktop">
-              Sign In
-            </Link>
-          )
-        )}
+        {/* Right Actions */}
+        <div className="navbar__actions">
+          {/* Search — desktop only here; mobile gets its own row below */}
+          <button
+            className="navbar__search-btn navbar__desktop-only"
+            onClick={() => window.dispatchEvent(new Event('technest:open-search'))}
+            aria-label="Search (Ctrl+K)"
+          >
+            <IconSearch size={17} />
+            <kbd className="navbar__search-kbd">⌘K</kbd>
+          </button>
+
+          {/* Theme toggle */}
+          <button className="navbar__theme-btn" onClick={toggleTheme} aria-label="Toggle colour mode">
+            {theme === 'dark' ? <IconSun /> : <IconMoon />}
+          </button>
+
+          {/* Wishlist — desktop only here; mobile gets it in the row below */}
+          <Link href="/wishlist" className="navbar__icon-link navbar__desktop-only" aria-label={`Wishlist (${wishlistCount})`}>
+            <IconHeart size={18} />
+            <span className="navbar__icon-label">Wishlist</span>
+            {wishlistCount > 0 && <span className="navbar__badge">{wishlistCount}</span>}
+          </Link>
+
+          {/* Cart — desktop only here; mobile gets it in the row below */}
+          <Link
+            href="/cart"
+            className={`navbar__icon-link navbar__desktop-only${bounce ? ' navbar__icon-link--bounce' : ''}`}
+            aria-label={`Cart (${cartCount} items)`}
+          >
+            <IconCart size={18} />
+            <span className="navbar__icon-label">Cart</span>
+            {cartCount > 0 && <span className="navbar__badge">{cartCount}</span>}
+          </Link>
+
+          {/* Auth */}
+          {isLoaded && (
+            isSignedIn ? (
+              <div className="navbar__auth">
+                <LoyaltyBadge />
+                <UserButton />
+              </div>
+            ) : (
+              <Link href="/sign-in" className="navbar__signin-btn navbar__auth" aria-label="Sign In">
+                <IconUser size={16} className="navbar__signin-icon" />
+                <span className="navbar__signin-text">Sign In</span>
+              </Link>
+            )
+          )}
+        </div>
       </div>
 
-      {/* ── Mobile Dropdown ── */}
+      {/* ── Mobile-only utility row: search pill + wishlist + cart ── */}
+      <div className="navbar__row navbar__row--mobile-utility">
+        <button
+          className="navbar__mobile-search"
+          onClick={() => window.dispatchEvent(new Event('technest:open-search'))}
+          aria-label="Search"
+        >
+          <IconSearch size={16} />
+          <span>Search products…</span>
+        </button>
+
+        <Link href="/wishlist" className="navbar__mobile-icon" aria-label={`Wishlist (${wishlistCount})`}>
+          <IconHeart size={19} />
+          {wishlistCount > 0 && <span className="navbar__badge">{wishlistCount}</span>}
+        </Link>
+
+        <Link
+          href="/cart"
+          className={`navbar__mobile-icon${bounce ? ' navbar__icon-link--bounce' : ''}`}
+          aria-label={`Cart (${cartCount} items)`}
+        >
+          <IconCart size={19} />
+          {cartCount > 0 && <span className="navbar__badge">{cartCount}</span>}
+        </Link>
+      </div>
+
+      {/* ── Mobile Dropdown (nav links only) ── */}
       {menuOpen && (
         <div className="navbar__mobile-menu" role="navigation" aria-label="Mobile navigation">
           <Link href="/"               className="navbar__link" onClick={closeMenu}>Home</Link>
@@ -187,42 +221,6 @@ export default function Navbar() {
           <Link href="/order-tracking" className="navbar__link navbar__link--track" onClick={closeMenu}>Track Order</Link>
           <Link href="/about"          className="navbar__link" onClick={closeMenu}>About</Link>
           <Link href="/contact"        className="navbar__link" onClick={closeMenu}>Contact</Link>
-
-          <div className="navbar__mobile-menu-divider" />
-
-          <button
-            className="navbar__mobile-menu-row"
-            onClick={() => { window.dispatchEvent(new Event('technest:open-search')); closeMenu(); }}
-          >
-            <IconSearch size={17} />
-            <span>Search</span>
-          </button>
-
-          <Link href="/wishlist" className="navbar__mobile-menu-row" onClick={closeMenu}>
-            <IconHeart size={17} />
-            <span>Wishlist</span>
-            {wishlistCount > 0 && <span className="navbar__badge navbar__badge--inline">{wishlistCount}</span>}
-          </Link>
-
-          <button className="navbar__mobile-menu-row" onClick={toggleTheme}>
-            {theme === 'dark' ? <IconSun size={17} /> : <IconMoon size={17} />}
-            <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-          </button>
-
-          <div className="navbar__mobile-menu-auth">
-            {isLoaded && (
-              isSignedIn ? (
-                <>
-                  <LoyaltyBadge />
-                  <UserButton />
-                </>
-              ) : (
-                <Link href="/sign-in" className="navbar__signin-btn" style={{ width: '100%', textAlign: 'center', display: 'block' }} onClick={closeMenu}>
-                  Sign In
-                </Link>
-              )
-            )}
-          </div>
         </div>
       )}
     </nav>
