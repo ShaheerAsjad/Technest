@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const access = await requireStaffAccess('analytics');
+    const access = await requireStaffAccess();
     if (!access.ok) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }

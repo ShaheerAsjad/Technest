@@ -1,7 +1,16 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
   const year = new Date().getFullYear();
+
+  // Do not render Footer on /admin routes
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <footer className="footer">

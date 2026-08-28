@@ -4,7 +4,7 @@ import { UserButton } from '@clerk/nextjs';
 import { getCurrentUserRecord } from '@/lib/permissions';
 
 const NAV_ITEMS = [
-  { href: '/admin',            label: 'Dashboard',     module: 'analytics', icon: '◆' },
+  { href: '/admin',            label: 'Dashboard',     module: null,        icon: '◆' },
   { href: '/admin/orders',     label: 'Orders',        module: 'orders',    icon: '▤' },
   { href: '/admin/products',   label: 'Inventory',     module: 'inventory', icon: '▦' },
   { href: '/admin/coupons',    label: 'Coupons',       module: 'coupons',   icon: '◈' },
@@ -28,6 +28,7 @@ export default async function AdminLayout({ children }) {
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (isAdmin) return true;
     if (item.adminOnly) return false;
+    if (item.module === null) return true; // Dashboard is visible to all staff members by default
     return permissions.includes(item.module);
   });
 

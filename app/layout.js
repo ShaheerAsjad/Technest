@@ -1,5 +1,4 @@
 import { ClerkProvider } from '@clerk/nextjs';
-import { headers } from 'next/headers';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -13,13 +12,7 @@ export const metadata = {
   description: 'Phones, laptops, gaming gear, and accessories — curated for the future. Shop the latest tech at TechNest.',
 };
 
-export default async function RootLayout({ children }) {
-  // Read the pathname injected by middleware to detect admin routes.
-  // This lets us hide the public Navbar/Footer without a client-side hook.
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') || '';
-  const isAdminRoute = pathname.startsWith('/admin');
-
+export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en" data-theme="dark">
@@ -33,12 +26,12 @@ export default async function RootLayout({ children }) {
         </head>
         <body>
           <Providers>
-            {!isAdminRoute && <AmbientGlow />}
-            {!isAdminRoute && <Navbar />}
-            {!isAdminRoute && <CommandPalette />}
+            <AmbientGlow />
+            <Navbar />
+            <CommandPalette />
             <main id="page-root">{children}</main>
-            {!isAdminRoute && <Footer />}
-            {!isAdminRoute && <BackToTop />}
+            <Footer />
+            <BackToTop />
           </Providers>
         </body>
       </html>

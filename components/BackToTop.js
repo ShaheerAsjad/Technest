@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function BackToTop() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -11,7 +13,7 @@ export default function BackToTop() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  if (!visible) return null;
+  if (pathname?.startsWith('/admin') || !visible) return null;
 
   return (
     <button
