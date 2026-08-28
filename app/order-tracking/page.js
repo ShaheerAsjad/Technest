@@ -9,11 +9,10 @@ const STEP_ICONS = {
   'Order Placed': '📋',
   'Packed':       '📦',
   'Shipped':      '🚚',
-  'Delivered':    '✅',
+  'Delivered':    '🎁',
 };
 
 function OrderTrackingContent() {
-  // ── Business logic — DO NOT MODIFY ────────────────────────────
   const searchParams = useSearchParams();
   const initialOrderId = searchParams.get('orderId') || '';
 
@@ -35,7 +34,7 @@ function OrderTrackingContent() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/orders/${id}`);
+      const res = await fetch(`/api/orders/${id}`, { cache: 'no-store' });
       const data = await res.json();
       if (res.ok) {
         setOrderData(data);
@@ -52,8 +51,16 @@ function OrderTrackingContent() {
   };
   // ─────────────────────────────────────────────────────────────
 
-  const currentStatus = orderData?.status || 'Order Placed';
-  const currentStepIndex = TRACKING_STEPS.indexOf(currentStatus);
+  const STATUS_MAP = {
+    'order placed': 0,
+    'processing': 1,
+    'packed': 1,
+    'shipped': 2,
+    'delivered': 3,
+  };
+
+  const rawStatus = (orderData?.status || 'Order Placed').toLowerCase().trim();
+  const currentStepIndex = STATUS_MAP[rawStatus] !== undefined ? STATUS_MAP[rawStatus] : 0;
 
   return (
     <div className="container py-8">

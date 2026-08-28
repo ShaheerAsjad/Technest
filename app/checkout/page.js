@@ -21,6 +21,7 @@ export default function CheckoutPage() {
     address: '',
     city: ''
   });
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -56,9 +57,23 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setPhoneTouched(true);
 
     if (cartItems.length === 0) {
       alert('Your cart is empty! Please add products to cart before checking out.');
+      return;
+    }
+
+    const rawPhone = formData.phone || '';
+    const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
+    const hasInvalidChars = /[^0-9+]/.test(rawPhone);
+    const isValidPakPhone = !hasInvalidChars && (
+      (cleanPhone.length === 11 && cleanPhone.startsWith('03')) ||
+      (cleanPhone.length === 12 && cleanPhone.startsWith('923'))
+    );
+
+    if (!isValidPakPhone) {
+      alert('Please enter a valid 11-digit Pakistani phone number starting with 03 (e.g. 03001234567). Only digits are allowed.');
       return;
     }
 
@@ -166,14 +181,58 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="contact-form__field">
-                  <label className="form-label">Phone Number</label>
+                  <label className="form-label">Phone Number (Pakistani Format: 03XXXXXXXXX)</label>
                   <input 
                     type="tel" required 
                     className="form-input"
-                    placeholder="+92 300 1234567"
-                    value={formData.phone} 
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    placeholder="03001234567"
+                    maxLength={13}
+                    value={formData.phone}
+                    onBlur={() => setPhoneTouched(true)}
+                    onChange={(e) => {
+                      setPhoneTouched(true);
+                      // Only allow digits and leading plus sign
+                      const inputVal = e.target.value;
+                      const sanitized = inputVal.replace(/[^0-9+]/g, '');
+                      setFormData(prev => ({ ...prev, phone: sanitized }));
+                    }}
                   />
+                  {(phoneTouched || formData.phone) && (() => {
+                    const raw = formData.phone || '';
+                    const clean = raw.replace(/[^0-9]/g, '');
+                    const hasAlphabets = /[a-zA-Z]/.test(raw);
+                    const isPakFormat = (clean.length === 11 && clean.startsWith('03')) || (clean.length === 12 && clean.startsWith('923'));
+
+                    if (!raw.trim()) {
+                      return (
+                        <span style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ⚠ Phone number is required
+                        </span>
+                      );
+                    }
+
+                    if (hasAlphabets) {
+                      return (
+                        <span style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ⚠ Alphabets not allowed! Please enter numbers only.
+                        </span>
+                      );
+                    }
+
+                    if (!isPakFormat) {
+                      return (
+                        <span style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          ⚠ Must be an 11-digit Pakistani number starting with 03 (e.g. 03001234567)
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <span style={{ fontSize: '0.78rem', color: '#22c55e', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ✓ Valid Pakistani phone number
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
 

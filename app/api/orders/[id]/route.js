@@ -5,13 +5,16 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const result = await sql`SELECT * FROM orders WHERE id = ${id}`;
 
     const rows = Array.isArray(result) ? result : (result.rows || []);
 
     if (rows.length === 0) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404, headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
     }
 
     const order = rows[0];
@@ -25,9 +28,14 @@ export async function GET(request, { params }) {
       }
     }
 
-    return NextResponse.json(order);
+    return NextResponse.json(order, {
+      headers: { 'Cache-Control': 'no-store, max-age=0' }
+    });
   } catch (error) {
     console.error('Fetch Order Error:', error);
-    return NextResponse.json({ error: 'Server error', details: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Server error', details: error.message },
+      { status: 500, headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   }
 }

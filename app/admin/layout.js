@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { UserButton } from '@clerk/nextjs';
 import { getCurrentUserRecord } from '@/lib/permissions';
+import AdminSidebarNav from '@/components/AdminSidebarNav';
 
 const NAV_ITEMS = [
   { href: '/admin',            label: 'Dashboard',     module: null,        icon: '◆' },
@@ -40,14 +41,7 @@ export default async function AdminLayout({ children }) {
           TechNest <span className="admin-sidebar__badge">{isAdmin ? 'Admin' : 'Staff'}</span>
         </div>
 
-        <nav className="admin-sidebar__nav">
-          {visibleItems.map((item) => (
-            <Link key={item.href} href={item.href} className="admin-sidebar__link">
-              <span className="admin-sidebar__icon">{item.icon}</span>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <AdminSidebarNav visibleItems={visibleItems} />
 
         <div className="admin-sidebar__footer">
           <Link href="/" className="admin-sidebar__link admin-sidebar__link--muted">

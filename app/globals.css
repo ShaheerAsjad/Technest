@@ -594,6 +594,29 @@ button, input, select, textarea {
   transform: translateY(-1px);
 }
 
+/* Admin Sidebar Unread Badge */
+.admin-sidebar__unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f97316;
+  color: #000;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  animation: pulseBadge 2s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
 /* Theme toggle */
 .navbar__theme-btn {
   display: flex;
