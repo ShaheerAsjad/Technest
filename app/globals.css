@@ -561,6 +561,39 @@ button, input, select, textarea {
   transform: translateY(-1px);
 }
 
+.navbar__auth {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Staff-only Dashboard shortcut button */
+.navbar__dashboard-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  background: rgba(249, 115, 22, 0.12);
+  color: #f97316;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all var(--transition-smooth);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.navbar__dashboard-btn:hover {
+  background: rgba(249, 115, 22, 0.22);
+  border-color: rgba(249, 115, 22, 0.6);
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.25);
+  color: #fb923c;
+  transform: translateY(-1px);
+}
+
 /* Theme toggle */
 .navbar__theme-btn {
   display: flex;
@@ -5937,3 +5970,27 @@ button, input, select, textarea {
   .admin-sidebar { display: none; }
   .admin-inbox { grid-template-columns: 1fr; }
 }
+
+/* ── Select & Dropdown Option Styling Fix ── */
+select,
+.admin-table__select,
+.form-input select {
+  color-scheme: dark;
+  background-color: #121214 !important;
+  color: #ffffff !important;
+}
+
+select option,
+.admin-table__select option {
+  background-color: #1c1c21 !important;
+  color: #ffffff !important;
+  padding: 8px 12px !important;
+}
+
+select option:checked,
+select option:hover,
+select option:focus {
+  background-color: #f97316 !important;
+  color: #ffffff !important;
+}
+

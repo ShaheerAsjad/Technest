@@ -1,10 +1,10 @@
 'use client';
 
-import { SignIn } from '@clerk/nextjs';
+import { SignUp } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { useApp } from '@/context/AppContext';
 
-export default function SignInPage() {
+export default function SignUpPage() {
     const { theme } = useApp();
     const isDark = theme === 'dark';
 
@@ -37,14 +37,14 @@ export default function SignInPage() {
                     color: #f97316 !important;
                 }
                 @media (max-width: 900px) {
-                    .signin-left-banner {
+                    .signup-left-banner {
                         display: none !important;
                     }
                 }
             `}</style>
 
-            {/* Left Side: Premium Shiny Futuristic Tech Vibe (Similar to previous best style with adaptive colors) */}
-            <div className="signin-left-banner" style={{
+            {/* Left Side Banner */}
+            <div className="signup-left-banner" style={{
                 flex: '1',
                 position: 'relative',
                 backgroundImage: 'url("https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1")',
@@ -55,7 +55,6 @@ export default function SignInPage() {
                 justifyContent: 'flex-end',
                 padding: '60px',
             }}>
-                {/* Smart Adaptive Gradient Overlay for both modes */}
                 <div style={{
                     position: 'absolute',
                     top: 0, left: 0, right: 0, bottom: 0,
@@ -64,22 +63,21 @@ export default function SignInPage() {
                         : 'linear-gradient(to top, rgba(20,24,33,0.9) 0%, rgba(20,24,33,0.4) 60%, rgba(20,24,33,0.1) 100%)',
                     transition: 'background 0.3s ease'
                 }} />
-
                 <div style={{ position: 'relative', zIndex: 2, color: '#ffffff' }}>
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                         <span style={{ width: '8px', height: '8px', backgroundColor: '#f97316', borderRadius: '50%', marginRight: '8px' }} />
                         <span style={{ color: '#f97316', fontWeight: '600', fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '1px' }}>TechNest Ecosystem</span>
                     </div>
                     <h1 style={{ fontSize: '2.5rem', fontWeight: '800', margin: '0 0 10px 0', lineHeight: '1.2' }}>
-                        Next-Gen Tech.
+                        Join TechNest.
                     </h1>
                     <p style={{ color: '#d4d4d8', fontSize: '1rem', maxWidth: '400px', margin: 0, lineHeight: '1.5' }}>
-                        Access high-performance gear, modern hardware, and curated futuristic innovations.
+                        Create your account and get access to premium tech gear and exclusive deals.
                     </p>
                 </div>
             </div>
 
-            {/* Right Side: Sign In Box Aligned */}
+            {/* Right Side: Sign Up Box */}
             <div style={{
                 flex: '1',
                 display: 'flex',
@@ -89,10 +87,10 @@ export default function SignInPage() {
                 backgroundColor: isDark ? '#070708' : '#f8f9fa',
             }}>
                 <div style={{ width: '100%', maxWidth: '420px', display: 'flex', justifyContent: 'center' }}>
-                    <SignIn
-                        path="/sign-in"
+                    <SignUp
+                        path="/sign-up"
                         routing="path"
-                        signUpUrl="/sign-up"
+                        signInUrl="/sign-in"
                         appearance={{
                             baseTheme: isDark ? dark : undefined,
                             variables: isDark ? {

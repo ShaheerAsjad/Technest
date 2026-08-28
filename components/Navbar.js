@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import { UserButton, useUser } from '@clerk/nextjs';
 import LoyaltyBadge from './LoyaltyBadge';
 
 /* ─── Inline SVG icons ─── */
@@ -67,12 +68,26 @@ function IconUser({ size = 17 }) {
   );
 }
 
+function IconDashboard({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  );
+}
+
 export default function Navbar() {
+  const pathname = usePathname();
   const { cartCount, wishlistCount, theme, toggleTheme } = useApp();
   const { isSignedIn, isLoaded } = useUser();
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [bounce,   setBounce]     = useState(false);
+  // null = not checked yet, 'none' = customer, 'staff' = employee/admin
+  const [userRole, setUserRole]   = useState(null);
   const prevCount = useRef(cartCount);
 
   /* Scroll shadow */
@@ -100,7 +115,29 @@ export default function Navbar() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  /* Fetch user role to decide whether to show Dashboard button */
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setUserRole('none');
+      return;
+    }
+    fetch('/api/me/role')
+      .then(r => r.ok ? r.json() : { role: 'customer' })
+      .then(data => {
+        const role = data?.role || 'customer';
+        setUserRole(role === 'admin' || role === 'employee' ? 'staff' : 'none');
+      })
+      .catch(() => setUserRole('none'));
+  }, [isLoaded, isSignedIn]);
+
   const closeMenu = () => setMenuOpen(false);
+  const isStaff = userRole === 'staff';
+
+  /* Never render Navbar on /admin pages */
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
@@ -136,7 +173,7 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="navbar__actions">
-          {/* Search — desktop only here; mobile gets its own row below */}
+          {/* Search — desktop only */}
           <button
             className="navbar__search-btn navbar__desktop-only"
             onClick={() => window.dispatchEvent(new Event('technest:open-search'))}
@@ -151,14 +188,14 @@ export default function Navbar() {
             {theme === 'dark' ? <IconSun /> : <IconMoon />}
           </button>
 
-          {/* Wishlist — desktop only here; mobile gets it in the row below */}
+          {/* Wishlist */}
           <Link href="/wishlist" className="navbar__icon-link navbar__desktop-only" aria-label={`Wishlist (${wishlistCount})`}>
             <IconHeart size={18} />
             <span className="navbar__icon-label">Wishlist</span>
             {wishlistCount > 0 && <span className="navbar__badge">{wishlistCount}</span>}
           </Link>
 
-          {/* Cart — desktop only here; mobile gets it in the row below */}
+          {/* Cart */}
           <Link
             href="/cart"
             className={`navbar__icon-link navbar__desktop-only${bounce ? ' navbar__icon-link--bounce' : ''}`}
@@ -169,11 +206,25 @@ export default function Navbar() {
             {cartCount > 0 && <span className="navbar__badge">{cartCount}</span>}
           </Link>
 
-          {/* Auth */}
+          {/* Auth & Staff Dashboard shortcut */}
           {isLoaded && (
             isSignedIn ? (
               <div className="navbar__auth">
                 <LoyaltyBadge />
+
+                {/* Dashboard shortcut badge — only rendered for Admin/Employee */}
+                {isStaff && (
+                  <Link
+                    href="/admin"
+                    className="navbar__dashboard-btn"
+                    aria-label="Go to Admin Dashboard"
+                    title="Open Admin Dashboard"
+                  >
+                    <IconDashboard size={14} />
+                    <span>Dashboard</span>
+                  </Link>
+                )}
+
                 <UserButton />
               </div>
             ) : (
@@ -186,7 +237,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── Mobile-only utility row: search pill + wishlist + cart ── */}
+      {/* ── Mobile-only utility row ── */}
       <div className="navbar__row navbar__row--mobile-utility">
         <button
           className="navbar__mobile-search"
@@ -212,7 +263,7 @@ export default function Navbar() {
         </Link>
       </div>
 
-      {/* ── Mobile Dropdown (nav links only) ── */}
+      {/* ── Mobile Dropdown ── */}
       {menuOpen && (
         <div className="navbar__mobile-menu" role="navigation" aria-label="Mobile navigation">
           <Link href="/"               className="navbar__link" onClick={closeMenu}>Home</Link>
@@ -221,6 +272,11 @@ export default function Navbar() {
           <Link href="/order-tracking" className="navbar__link navbar__link--track" onClick={closeMenu}>Track Order</Link>
           <Link href="/about"          className="navbar__link" onClick={closeMenu}>About</Link>
           <Link href="/contact"        className="navbar__link" onClick={closeMenu}>Contact</Link>
+          {isStaff && (
+            <Link href="/admin" className="navbar__link navbar__link--track" onClick={closeMenu}>
+              ◆ Admin Dashboard
+            </Link>
+          )}
         </div>
       )}
     </nav>

@@ -6,28 +6,33 @@ import { writeAuditLog } from '@/lib/audit';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const access = await requireStaffAccess('coupons');
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
-  }
+  try {
+    const access = await requireStaffAccess('coupons');
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
+    }
 
-  const coupons = await sql`SELECT * FROM coupons ORDER BY created_at DESC`;
-  return NextResponse.json(coupons);
+    const coupons = await sql`SELECT * FROM coupons ORDER BY created_at DESC`;
+    return NextResponse.json(coupons);
+  } catch (err) {
+    console.error('[admin/coupons GET] Error:', err.message);
+    return NextResponse.json({ error: 'Failed to load coupons.' }, { status: 500 });
+  }
 }
 
 export async function POST(request) {
-  const access = await requireStaffAccess('coupons');
-  if (!access.ok) {
-    return NextResponse.json({ error: access.error }, { status: access.status });
-  }
-
-  const { code, discountType, discountValue, expiresAt } = await request.json();
-
-  if (!code || !discountValue || Number(discountValue) <= 0) {
-    return NextResponse.json({ error: 'A code and a positive discount value are required.' }, { status: 400 });
-  }
-
   try {
+    const access = await requireStaffAccess('coupons');
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
+    }
+
+    const { code, discountType, discountValue, expiresAt } = await request.json();
+
+    if (!code || !discountValue || Number(discountValue) <= 0) {
+      return NextResponse.json({ error: 'A code and a positive discount value are required.' }, { status: 400 });
+    }
+
     const [coupon] = await sql`
       INSERT INTO coupons (code, discount_type, discount_value, expires_at, created_by)
       VALUES (${code.toUpperCase()}, ${discountType || 'percent'}, ${discountValue}, ${expiresAt || null}, ${access.user.id})
@@ -48,7 +53,7 @@ export async function POST(request) {
     if (String(error).includes('duplicate key')) {
       return NextResponse.json({ error: 'That coupon code already exists.' }, { status: 409 });
     }
-    console.error('Coupon create error:', error);
+    console.error('[admin/coupons POST] Error:', error.message);
     return NextResponse.json({ error: 'Could not create coupon.' }, { status: 500 });
   }
 }
