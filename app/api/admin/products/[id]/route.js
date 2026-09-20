@@ -1,83 +1,83 @@
-import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { requireStaffAccess } from '@/lib/permissions';
+import { json, readJson, serverError, NO_STORE } from '@/lib/api';
+import { requireStaffAccess, actorName } from '@/lib/permissions';
 import { writeAuditLog } from '@/lib/audit';
+import { cleanText } from '@/lib/validators';
+import { bustCatalog } from '@/lib/revalidate';
 
 export const dynamic = 'force-dynamic';
 
+// body field -> [column, coercer]  (whitelist: nothing else can ever be written)
+const FIELDS = {
+  stock:        ['stock',          (v) => { const n = Math.trunc(Number(v)); return Number.isFinite(n) && n >= 0 ? n : undefined; }],
+  price:        ['price',          (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : undefined; }],
+  originalPrice:['original_price', (v) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? n : undefined; }],
+  is_archived:  ['is_archived',    (v) => (typeof v === 'boolean' ? v : undefined)],
+  isOnSale:     ['is_on_sale',     (v) => (typeof v === 'boolean' ? v : undefined)],
+  isFeatured:   ['is_featured',    (v) => (typeof v === 'boolean' ? v : undefined)],
+  freeShipping: ['free_shipping',  (v) => (typeof v === 'boolean' ? v : undefined)],
+  title:        ['title',          (v) => (cleanText(v, 200) || undefined)],
+  description:  ['description',    (v) => (typeof v === 'string' ? cleanText(v, 5000) : undefined)],
+  brand:        ['brand',          (v) => (typeof v === 'string' ? cleanText(v, 120) || null : undefined)],
+  sku:          ['sku',            (v) => (typeof v === 'string' ? cleanText(v, 80) || null : undefined)],
+  image:        ['image',          (v) => (cleanText(v, 2000) || undefined)],
+  categoryId:   ['category_id',    (v) => (v === null || v === '' ? null : Number.isFinite(parseInt(v, 10)) ? parseInt(v, 10) : undefined)],
+  taxRate:      ['tax_rate',       (v) => (v === null || v === '' ? null : Number.isFinite(Number(v)) ? Math.min(100, Math.max(0, Number(v))) : undefined)],
+};
+
 export async function PATCH(request, { params }) {
+  const access = await requireStaffAccess('inventory');
+  if (!access.ok) return json({ error: access.error }, access.status, NO_STORE);
   try {
-    const access = await requireStaffAccess('inventory');
-    if (!access.ok) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
-    }
+    const { id: rawId } = await params;
+    const id = parseInt(rawId, 10);
+    if (!Number.isFinite(id)) return json({ error: 'Invalid product.' }, 400, NO_STORE);
+    const body = await readJson(request);
+    if (!body) return json({ error: 'Invalid request.' }, 400, NO_STORE);
 
-    const { id } = await params;
-    const body = await request.json();
-
-    if (typeof body.stock === 'number') {
-      await sql`UPDATE products SET stock = ${body.stock} WHERE id = ${id}`;
+    const sets = []; const values = [];
+    for (const [key, [col, coerce]] of Object.entries(FIELDS)) {
+      if (!(key in body)) continue;
+      const v = coerce(body[key]);
+      if (v === undefined) return json({ error: `Invalid value for ${key}.` }, 400, NO_STORE);
+      values.push(v); sets.push(`${col} = $${values.length}`);
     }
-    if (typeof body.price === 'number') {
-      await sql`UPDATE products SET price = ${body.price} WHERE id = ${id}`;
-    }
-    if (typeof body.is_archived === 'boolean') {
-      await sql`UPDATE products SET is_archived = ${body.is_archived} WHERE id = ${id}`;
-    }
+    if (!sets.length) return json({ error: 'Nothing to update.' }, 400, NO_STORE);
+    if (body.image && !('images' in body)) { values.push(JSON.stringify([cleanText(body.image, 2000)])); sets.push(`images = $${values.length}::jsonb`); }
 
-    await writeAuditLog({
-      actorUserId: access.user.id,
-      actorName: `${access.user.first_name || ''} ${access.user.last_name || ''}`.trim(),
-      action: 'product.updated',
-      targetType: 'product',
-      targetId: id,
-      details: body,
-    });
+    values.push(id);
+    const rows = await sql.query(`UPDATE products SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING id`, values);
+    if (!rows.length) return json({ error: 'Product not found.' }, 404, NO_STORE);
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('[admin/products PATCH] Error:', error.message);
-    return NextResponse.json({ error: 'Could not update product.' }, { status: 500 });
+    await writeAuditLog({ actorUserId: access.user.id, actorName: actorName(access.user), action: 'product.updated', targetType: 'product', targetId: id, details: body });
+    bustCatalog();
+    return json({ success: true }, 200, NO_STORE);
+  } catch (err) {
+    if (/products_sku_uq|duplicate key/i.test(String(err.message))) return json({ error: 'That SKU already exists on another product.' }, 409, NO_STORE);
+    return serverError('admin/products PATCH', err, 'Could not update product.');
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(_request, { params }) {
+  const access = await requireStaffAccess('inventory');
+  if (!access.ok) return json({ error: access.error }, access.status, NO_STORE);
   try {
-    const access = await requireStaffAccess('inventory');
-    if (!access.ok) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
-    }
-
-    const { id } = await params;
-
-    // Check if product has any orders referencing it (safety check)
-    // We soft-delete (archive) if it has orders, hard-delete if not
+    const { id: rawId } = await params;
+    const id = parseInt(rawId, 10);
+    if (!Number.isFinite(id)) return json({ error: 'Invalid product.' }, 400, NO_STORE);
     const [product] = await sql`SELECT id, title FROM products WHERE id = ${id}`;
-    if (!product) {
-      return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
-    }
+    if (!product) return json({ error: 'Product not found.' }, 404, NO_STORE);
 
+    try { await sql`DELETE FROM reviews WHERE product_id = ${id}`; } catch { /* no reviews table */ }
     await sql`DELETE FROM products WHERE id = ${id}`;
 
-    await writeAuditLog({
-      actorUserId: access.user.id,
-      actorName: `${access.user.first_name || ''} ${access.user.last_name || ''}`.trim(),
-      action: 'product.deleted',
-      targetType: 'product',
-      targetId: id,
-      details: { title: product.title },
-    });
-
-    return NextResponse.json({ success: true });
+    await writeAuditLog({ actorUserId: access.user.id, actorName: actorName(access.user), action: 'product.deleted', targetType: 'product', targetId: id, details: { title: product.title } });
+    bustCatalog();
+    return json({ success: true }, 200, NO_STORE);
   } catch (err) {
-    console.error('[admin/products DELETE] Error:', err.message);
-    // If FK constraint violation (product has orders), return friendly message
-    if (err.message?.includes('foreign key') || err.message?.includes('violates')) {
-      return NextResponse.json(
-        { error: 'Cannot delete — this product has existing orders. Use Archive instead.' },
-        { status: 409 }
-      );
+    if (/foreign key|violates/i.test(String(err.message))) {
+      return json({ error: 'Cannot delete - this product is referenced elsewhere. Use Archive instead.' }, 409, NO_STORE);
     }
-    return NextResponse.json({ error: 'Failed to delete product.' }, { status: 500 });
+    return serverError('admin/products DELETE', err, 'Failed to delete product.');
   }
 }

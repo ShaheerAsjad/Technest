@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { formatPrice } from '@/lib/format';
+
+const EMPTY = { code: '', discountType: 'percent', discountValue: '', expiresAt: '', minOrderAmount: '', maxUses: '' };
 
 export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ code: '', discountType: 'percent', discountValue: '', expiresAt: '' });
+  const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState('');
 
   async function load() {
@@ -23,11 +26,11 @@ export default function AdminCouponsPage() {
     const res = await fetch('/api/admin/coupons', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, discountValue: Number(form.discountValue) }),
+      body: JSON.stringify({ ...form, discountValue: Number(form.discountValue) || 0 }),
     });
     const json = await res.json();
     if (res.ok) {
-      setForm({ code: '', discountType: 'percent', discountValue: '', expiresAt: '' });
+      setForm(EMPTY);
       load();
     } else {
       setError(json.error || 'Could not create coupon.');
@@ -68,15 +71,34 @@ export default function AdminCouponsPage() {
             onChange={(e) => setForm({ ...form, discountType: e.target.value })}
           >
             <option value="percent">Percent Off</option>
-            <option value="flat">Flat Amount Off</option>
+            <option value="flat">Flat Amount Off (Rs.)</option>
+            <option value="free_shipping">Free Shipping</option>
           </select>
           <input
             className="form-input"
             type="number"
-            placeholder="Value"
-            value={form.discountValue}
+            min="0"
+            placeholder={form.discountType === 'percent' ? 'Percent (1-100)' : form.discountType === 'flat' ? 'Amount in Rs.' : 'Not needed'}
+            value={form.discountType === 'free_shipping' ? '' : form.discountValue}
             onChange={(e) => setForm({ ...form, discountValue: e.target.value })}
-            required
+            disabled={form.discountType === 'free_shipping'}
+            required={form.discountType !== 'free_shipping'}
+          />
+          <input
+            className="form-input"
+            type="number"
+            min="0"
+            placeholder="Min. order (Rs.)"
+            value={form.minOrderAmount}
+            onChange={(e) => setForm({ ...form, minOrderAmount: e.target.value })}
+          />
+          <input
+            className="form-input"
+            type="number"
+            min="1"
+            placeholder="Max uses"
+            value={form.maxUses}
+            onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
           />
           <input
             className="form-input"
@@ -95,13 +117,15 @@ export default function AdminCouponsPage() {
         ) : (
           <table className="admin-table">
             <thead>
-              <tr><th>Code</th><th>Discount</th><th>Expires</th><th>Status</th><th></th></tr>
+              <tr><th>Code</th><th>Discount</th><th>Min order</th><th>Used</th><th>Expires</th><th>Status</th><th></th></tr>
             </thead>
             <tbody>
               {coupons.map((c) => (
                 <tr key={c.id}>
                   <td><strong>{c.code}</strong></td>
-                  <td>{c.discount_type === 'percent' ? `${c.discount_value}%` : `$${c.discount_value}`}</td>
+                  <td>{c.discount_type === 'percent' ? `${c.discount_value}%` : c.discount_type === 'free_shipping' ? 'Free shipping' : formatPrice(c.discount_value)}</td>
+                  <td>{Number(c.min_order_amount) > 0 ? formatPrice(c.min_order_amount) : '—'}</td>
+                  <td>{c.used_count ?? 0}{c.max_uses ? ` / ${c.max_uses}` : ''}</td>
                   <td>{c.expires_at ? new Date(c.expires_at).toLocaleDateString() : 'Never'}</td>
                   <td>
                     <span className={`admin-badge ${c.active ? 'admin-badge--success' : 'admin-badge--muted'}`}>

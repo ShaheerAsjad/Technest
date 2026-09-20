@@ -1,335 +1,302 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useApp } from '@/context/AppContext';
+import Link from 'next/link';
 import { useUser, SignInButton } from '@clerk/nextjs';
+import { useApp } from '@/context/AppContext';
+import { useCartQuote } from '@/lib/useCartQuote';
+import { useCoupon } from '@/lib/useCoupon';
+import { fetchJson, newIdempotencyKey } from '@/lib/client';
 import { formatPrice } from '@/lib/format';
+import { normalizePkPhone } from '@/lib/validators';
+import CouponBox from '@/components/CouponBox';
+import OrderSummaryRows from '@/components/OrderSummaryRows';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { isSignedIn, isLoaded } = useUser();
-  const { cart = [], clearCart } = useApp();
+  const { isSignedIn, isLoaded, user } = useUser();
+  const { cart, mounted, clearCart } = useApp();
+  const [coupon, applyCoupon] = useCoupon();
 
   const [showAlert, setShowAlert] = useState(true);
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-
-  const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    address: '',
-    city: ''
-  });
+  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', notes: '' });
+  const [payment, setPayment] = useState('cod');
   const [phoneTouched, setPhoneTouched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const idemKey = useRef(null);
+  const errorRef = useRef(null);
 
+  // Delay the city -> shipping recalculation while the customer is still typing
+  const [cityForQuote, setCityForQuote] = useState('');
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoadingProducts(true);
-        const res = await fetch('/api/products');
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        console.error("Checkout Products Fetch Error:", err);
-      } finally {
-        setLoadingProducts(false);
-      }
+    const t = setTimeout(() => setCityForQuote(form.city.trim()), 500);
+    return () => clearTimeout(t);
+  }, [form.city]);
+
+  const quote = useCartQuote({ city: cityForQuote, coupon, paymentMethod: payment, enabled: isLoaded && isSignedIn });
+  const { lines, pricing, settings, problems, loading: quoting, error: quoteError } = quote;
+
+  useEffect(() => { if (!idemKey.current) idemKey.current = newIdempotencyKey(); }, []);
+
+  // Pre-fill the name from the signed-in account (only if still empty)
+  useEffect(() => {
+    if (user && !form.name) {
+      const full = [user.firstName, user.lastName].filter(Boolean).join(' ');
+      if (full) setForm((f) => ({ ...f, name: full }));
     }
-    fetchProducts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-  // Map real cart items with product details
-  const cartItems = cart
-    .map((item) => {
-      const targetId = String(item.id || item.productId);
-      const prod = products.find((p) => String(p.id) === targetId);
-      return prod ? { id: prod.id, name: prod.name || prod.title, price: prod.price, quantity: item.quantity || 1 } : null;
-    })
-    .filter(Boolean);
+  // Make sure the selected payment method is actually enabled
+  useEffect(() => {
+    if (!settings) return;
+    const p = settings.payment;
+    if (payment === 'cod' && !p.codEnabled && p.bankTransferEnabled) setPayment('bank');
+    if (payment === 'bank' && !p.bankTransferEnabled && p.codEnabled) setPayment('cod');
+  }, [settings, payment]);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.05;
-  const totalAmount = subtotal + tax;
+  const cityOptions = useMemo(
+    () => [...new Set((settings?.shipping?.zones || []).flatMap((z) => z.cities || []))].slice(0, 80),
+    [settings]
+  );
+
+  const phoneValue = normalizePkPhone(form.phone);
+  const noPaymentMethod = settings && !settings.payment.codEnabled && !settings.payment.bankTransferEnabled;
+
+  const canSubmit =
+    !submitting && !quoting && lines.length > 0 && problems.length === 0 && pricing && !pricing.couponError && !pricing.minOrderProblem && !noPaymentMethod;
+
+  function fail(message) {
+    setError(message);
+    setTimeout(() => errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setPhoneTouched(true);
 
-    if (cartItems.length === 0) {
-      alert('Your cart is empty! Please add products to cart before checking out.');
-      return;
-    }
+    if (form.name.trim().length < 2) return fail('Please enter your full name.');
+    if (!phoneValue) return fail('Please enter a valid 11-digit Pakistani mobile number starting with 03 (e.g. 03001234567).');
+    if (form.address.trim().length < 6) return fail('Please enter your full delivery address.');
+    if (form.city.trim().length < 2) return fail('Please enter your city.');
+    if (!canSubmit) return fail('Please review your cart before placing the order.');
 
-    const rawPhone = formData.phone || '';
-    const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
-    const hasInvalidChars = /[^0-9+]/.test(rawPhone);
-    const isValidPakPhone = !hasInvalidChars && (
-      (cleanPhone.length === 11 && cleanPhone.startsWith('03')) ||
-      (cleanPhone.length === 12 && cleanPhone.startsWith('923'))
-    );
-
-    if (!isValidPakPhone) {
-      alert('Please enter a valid 11-digit Pakistani phone number starting with 03 (e.g. 03001234567). Only digits are allowed.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/checkout', {
+    setSubmitting(true);
+    const res = await fetchJson(
+      '/api/checkout',
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          cartItems,
-          totalAmount
-        })
-      });
+          name: form.name,
+          phone: phoneValue,
+          address: form.address,
+          city: form.city,
+          notes: form.notes,
+          paymentMethod: payment,
+          coupon,
+          items: cart.map((i) => ({ id: i.productId, quantity: i.quantity })),
+          idempotencyKey: idemKey.current,
+        }),
+      },
+      { timeout: 25000, retries: 0 }
+    );
+    setSubmitting(false);
 
-      const data = await res.json();
-
-      if (res.ok) {
-        if (typeof clearCart === 'function') {
-          clearCart();
-        }
-        router.push(`/order-success?orderId=${data.orderId}`);
-      } else {
-        alert('Error: ' + (data.error || 'Failed to place order'));
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Something went wrong!');
-    } finally {
-      setLoading(false);
+    if (res.ok && res.data?.orderId) {
+      clearCart();
+      applyCoupon('');
+      window.dispatchEvent(new CustomEvent('technest:route-start', { detail: { full: true } }));
+      router.push(`/order-success?orderId=${res.data.orderId}`);
+      return;
     }
+    if (res.status === 0) return fail('Network problem - your order was NOT placed. Please check your internet and try again.');
+    if (res.status === 401) return fail('Your session expired. Please sign in again.');
+    fail(res.data?.error || 'We could not place your order. Please try again.');
   };
 
-  if (!isLoaded || loadingProducts) {
+  if (!isLoaded || !mounted) {
     return (
-      <div className="container py-8 text-center" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="container py-8 text-center" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
         <div className="catalog-spinner" aria-hidden="true" style={{ margin: '0 auto 16px' }} />
-        <p className="catalog-loading-text">Loading Checkout…</p>
+        <p className="catalog-loading-text">Loading Checkout...</p>
       </div>
     );
   }
 
-  // Access Denied Modal (for unauthenticated users)
+  if (cart.length === 0) {
+    return (
+      <div className="container py-8">
+        <div className="catalog-empty">
+          <h1 className="page-title mb-4">Checkout</h1>
+          <p className="catalog-empty__text mb-6">Your cart is empty.</p>
+          <Link href="/products" className="btn btn--primary">Continue Shopping →</Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Access guard (unauthenticated users)
   if (!isSignedIn && showAlert) {
     return (
       <div className="checkout-auth-guard">
         <div className="checkout-auth-panel">
           <div className="checkout-auth-glow" aria-hidden="true" />
-          <button 
-            className="checkout-auth-close"
-            onClick={() => setShowAlert(false)}
-            aria-label="Close"
-          >
-            &times;
-          </button>
-
+          <button className="checkout-auth-close" onClick={() => setShowAlert(false)} aria-label="Close">&times;</button>
           <div className="checkout-auth-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
-          
-          <h2 className="checkout-auth-title">Authentication Required</h2>
+          <h2 className="checkout-auth-title">Sign in to continue</h2>
           <p className="checkout-auth-text">
-            To ensure your order is processed securely and can be tracked, please sign in or create an account before proceeding to checkout.
+            To keep your order secure and let you track it, please sign in or create an account before checkout. Your cart will be waiting.
           </p>
-
           <SignInButton mode="modal">
-            <button className="btn btn--primary" style={{ width: '100%', padding: '14px', fontSize: '15px' }}>
-              Sign In to Continue
-            </button>
+            <button className="btn btn--primary" style={{ width: '100%', padding: '14px', fontSize: '15px' }}>Sign In to Continue</button>
           </SignInButton>
         </div>
       </div>
     );
   }
 
+  if (!isSignedIn) {
+    return (
+      <div className="container py-8 text-center" style={{ minHeight: '50vh' }}>
+        <h1 className="page-title mb-4">Sign in required</h1>
+        <p className="mb-6" style={{ color: 'var(--text-muted)' }}>You need to be signed in to place an order.</p>
+        <SignInButton mode="modal"><button className="btn btn--primary">Sign In</button></SignInButton>
+      </div>
+    );
+  }
+
+  const phoneRaw = form.phone || '';
+  const phoneMsg = !phoneTouched && !phoneRaw ? null
+    : !phoneRaw.trim() ? { ok: false, text: 'Phone number is required' }
+    : /[a-zA-Z]/.test(phoneRaw) ? { ok: false, text: 'Numbers only, please.' }
+    : !phoneValue ? { ok: false, text: 'Must be an 11-digit Pakistani number starting with 03 (e.g. 03001234567)' }
+    : { ok: true, text: 'Valid Pakistani phone number' };
+
+  const p = settings?.payment;
+
   return (
     <div className="checkout-page">
       <div className="container py-8">
-        
         <div className="checkout-header">
           <h1 className="page-title">Secure Checkout</h1>
           <p className="catalog-page__sub">Complete your order details below.</p>
         </div>
 
         <div className="checkout-layout">
-          {/* Left: Checkout Form */}
+          {/* Left: form */}
           <div className="checkout-panel">
             <h2 className="checkout-panel__heading">Shipping Details</h2>
-            
-            <form onSubmit={handleSubmit} className="contact-form">
+
+            {error && <div className="notice notice--error" role="alert" ref={errorRef}>{error}</div>}
+            {quoteError && <div className="notice notice--error" role="alert">{quoteError}</div>}
+            {problems.length > 0 && <div className="notice notice--warn" role="alert">{problems[0].message} <Link href="/cart" className="notice__btn">Review cart</Link></div>}
+
+            <form onSubmit={handleSubmit} className="contact-form" noValidate>
               <div className="contact-form__row">
                 <div className="contact-form__field">
-                  <label className="form-label">Full Name</label>
-                  <input 
-                    type="text" required 
-                    className="form-input"
-                    placeholder="Ali Hassan"
-                    value={formData.name} 
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  />
+                  <label className="form-label" htmlFor="co-name">Full Name</label>
+                  <input id="co-name" type="text" required className="form-input" placeholder="Ali Hassan" autoComplete="name" maxLength={100}
+                    value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
 
                 <div className="contact-form__field">
-                  <label className="form-label">Phone Number (Pakistani Format: 03XXXXXXXXX)</label>
-                  <input 
-                    type="tel" required 
-                    className="form-input"
-                    placeholder="03001234567"
-                    maxLength={13}
-                    value={formData.phone}
+                  <label className="form-label" htmlFor="co-phone">Phone Number (03XXXXXXXXX)</label>
+                  <input id="co-phone" type="tel" required className="form-input" placeholder="03001234567" maxLength={14} autoComplete="tel"
+                    value={form.phone}
                     onBlur={() => setPhoneTouched(true)}
-                    onChange={(e) => {
-                      setPhoneTouched(true);
-                      // Only allow digits and leading plus sign
-                      const inputVal = e.target.value;
-                      const sanitized = inputVal.replace(/[^0-9+]/g, '');
-                      setFormData(prev => ({ ...prev, phone: sanitized }));
-                    }}
-                  />
-                  {(phoneTouched || formData.phone) && (() => {
-                    const raw = formData.phone || '';
-                    const clean = raw.replace(/[^0-9]/g, '');
-                    const hasAlphabets = /[a-zA-Z]/.test(raw);
-                    const isPakFormat = (clean.length === 11 && clean.startsWith('03')) || (clean.length === 12 && clean.startsWith('923'));
-
-                    if (!raw.trim()) {
-                      return (
-                        <span style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          ⚠ Phone number is required
-                        </span>
-                      );
-                    }
-
-                    if (hasAlphabets) {
-                      return (
-                        <span style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          ⚠ Alphabets not allowed! Please enter numbers only.
-                        </span>
-                      );
-                    }
-
-                    if (!isPakFormat) {
-                      return (
-                        <span style={{ fontSize: '0.78rem', color: '#ef4444', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          ⚠ Must be an 11-digit Pakistani number starting with 03 (e.g. 03001234567)
-                        </span>
-                      );
-                    }
-
-                    return (
-                      <span style={{ fontSize: '0.78rem', color: '#22c55e', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ✓ Valid Pakistani phone number
-                      </span>
-                    );
-                  })()}
+                    onChange={(e) => { setPhoneTouched(true); setForm((f) => ({ ...f, phone: e.target.value.replace(/[^0-9+]/g, '') })); }} />
+                  {phoneMsg && <span className={`field-msg ${phoneMsg.ok ? 'field-msg--ok' : 'field-msg--err'}`}>{phoneMsg.ok ? '✓' : '⚠'} {phoneMsg.text}</span>}
                 </div>
               </div>
 
               <div className="contact-form__field">
-                <label className="form-label">Delivery Address</label>
-                <textarea required 
-                  className="form-input form-textarea"
-                  placeholder="Street address, apartment, suite, etc."
-                  rows={3}
-                  value={formData.address} 
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                />
+                <label className="form-label" htmlFor="co-address">Delivery Address</label>
+                <textarea id="co-address" required className="form-input form-textarea" placeholder="House / shop no., street, area" rows={3} maxLength={300} autoComplete="street-address"
+                  value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </div>
 
               <div className="contact-form__field">
-                <label className="form-label">City</label>
-                <input 
-                  type="text" required 
-                  className="form-input"
-                  placeholder="Karachi"
-                  value={formData.city} 
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
-                />
+                <label className="form-label" htmlFor="co-city">City</label>
+                <input id="co-city" type="text" required className="form-input" placeholder="Lahore" maxLength={60} list="co-cities" autoComplete="address-level2"
+                  value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                {cityOptions.length > 0 && (
+                  <datalist id="co-cities">{cityOptions.map((c) => <option key={c} value={c.charAt(0).toUpperCase() + c.slice(1)} />)}</datalist>
+                )}
+                {pricing?.zoneName && <span className="field-msg field-msg--ok">✓ Delivery zone: {pricing.zoneName}{pricing.eta ? ` · ${pricing.eta}` : ''}</span>}
+              </div>
+
+              <div className="contact-form__field">
+                <label className="form-label" htmlFor="co-notes">Order notes (optional)</label>
+                <input id="co-notes" type="text" className="form-input" placeholder="Landmark, preferred delivery time…" maxLength={500}
+                  value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
 
               <div className="checkout-payment-box mt-4">
                 <div className="checkout-payment-header">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <line x1="12" y1="1" x2="12" y2="23"></line>
                     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                   </svg>
                   <span>Payment Method</span>
                 </div>
-                <div className="checkout-payment-method">
-                  <input type="radio" checked readOnly id="cod" />
-                  <label htmlFor="cod">Cash on Delivery (COD)</label>
-                </div>
+                {(!p || p.codEnabled) && (
+                  <label className="checkout-payment-method" htmlFor="pay-cod">
+                    <input type="radio" name="payment" id="pay-cod" checked={payment === 'cod'} onChange={() => setPayment('cod')} />
+                    <span>Cash on Delivery (COD){p?.codFee > 0 ? ` — fee ${formatPrice(p.codFee)}` : ''}</span>
+                  </label>
+                )}
+                {p?.bankTransferEnabled && (
+                  <label className="checkout-payment-method" htmlFor="pay-bank">
+                    <input type="radio" name="payment" id="pay-bank" checked={payment === 'bank'} onChange={() => setPayment('bank')} />
+                    <span>Bank Transfer</span>
+                  </label>
+                )}
+                {payment === 'bank' && p?.bankInstructions && <p className="checkout-bank-note">{p.bankInstructions}</p>}
+                {noPaymentMethod && <p className="coupon-box__error">No payment method is enabled right now. Please contact the store.</p>}
               </div>
 
-              <button 
-                type="submit" 
-                className="btn btn--primary contact-form__submit mt-6"
-                disabled={loading || loadingProducts || cartItems.length === 0}
-              >
-                {loading ? (
-                  <>
-                    <span className="contact-form__spinner" aria-hidden="true" />
-                    Processing...
-                  </>
-                ) : (
-                  'Confirm & Place Order'
-                )}
+              <button type="submit" className="btn btn--primary contact-form__submit mt-6" disabled={!canSubmit}>
+                {submitting ? (<><span className="contact-form__spinner" aria-hidden="true" /> Processing...</>) : 'Confirm & Place Order'}
               </button>
+              <p className="checkout-terms">By placing your order you agree to our <Link href="/terms">Terms</Link> and <Link href="/return-policy">Return Policy</Link>.</p>
             </form>
           </div>
 
-          {/* Right: Order Summary */}
+          {/* Right: summary */}
           <div className="checkout-summary">
             <h2 className="cart-summary__title">Order Review</h2>
-            
+
             <div className="checkout-summary__items">
-              {cartItems.map((item) => (
+              {lines.map((item) => (
                 <div key={item.id} className="checkout-summary__item">
                   <div className="checkout-summary__item-info">
-                    <span className="checkout-summary__item-qty">{item.quantity}×</span>
+                    <span className="checkout-summary__item-qty">{item.quantity}x</span>
                     <span className="checkout-summary__item-name">{item.name}</span>
                   </div>
                   <span className="checkout-summary__item-price">{formatPrice(item.price * item.quantity)}</span>
                 </div>
               ))}
+              {quoting && lines.length === 0 && <p className="cart-summary__note">Loading your items…</p>}
             </div>
 
-            <div className="cart-summary__rows mt-4">
-              <div className="cart-summary__row">
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal)}</span>
-              </div>
-              <div className="cart-summary__row">
-                <span>Tax (5%)</span>
-                <span>{formatPrice(tax)}</span>
-              </div>
-              <div className="cart-summary__row">
-                <span>Shipping</span>
-                <span className="cart-summary__free">Free</span>
-              </div>
-            </div>
+            <CouponBox applied={pricing?.couponCode} error={pricing?.couponError} onApply={applyCoupon} disabled={quoting} />
+            <div className="mt-4">{pricing && <OrderSummaryRows pricing={pricing} />}</div>
+            {pricing?.minOrderProblem && <p className="coupon-box__error">{pricing.minOrderProblem}</p>}
 
-            <div className="cart-summary__total-row">
-              <span>Total</span>
-              <span className="checkout-total-val">{formatPrice(totalAmount)}</span>
-            </div>
-            
             <div className="cart-summary__secure mt-4">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
-              Information is encrypted & secure
+              Prices are verified securely on our server
             </div>
           </div>
         </div>

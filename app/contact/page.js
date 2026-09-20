@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { isRequired, isValidEmail } from '@/lib/validators';
 
@@ -41,6 +41,27 @@ const CONTACT_INFO = [
 export default function ContactPage() {
   // ── Business logic — DO NOT MODIFY ────────────────────────────
   const { showToast } = useApp();
+  const [storeInfo, setStoreInfo] = useState(null);
+  useEffect(() => {
+    fetch('/api/settings').then((r) => (r.ok ? r.json() : null)).then((d) => setStoreInfo(d?.store || null)).catch(() => {});
+  }, []);
+  const st = storeInfo || {};
+  const infoCards = CONTACT_INFO.map((item) => {
+    if (item.label === 'Email') return { ...item, value: st.email || item.value };
+    if (item.label === 'Location') return { ...item, value: st.address || item.value };
+    return item;
+  });
+  if (st.phone) {
+    infoCards.splice(1, 0, {
+      label: 'Phone / WhatsApp',
+      value: st.whatsapp && st.whatsapp !== st.phone ? `${st.phone}  ·  ${st.whatsapp}` : st.phone,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.62 2.62a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.46-1.29a2 2 0 0 1 2.11-.45c.84.29 1.72.5 2.62.62A2 2 0 0 1 22 16.92z" />
+        </svg>
+      ),
+    });
+  }
   const [form, setForm]         = useState({ name: '', email: '', message: '' });
   const [error, setError]       = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,9 +76,9 @@ export default function ContactPage() {
     setSubmitting(true);
 
     try {
-      const response = await fetch('https://formspree.io/f/maewevpj', {
+      const response = await fetch('/api/support', {
         method: 'POST',
-        body: JSON.stringify({ name: form.name, email: form.email, message: form.message }),
+        body: JSON.stringify({ name: form.name, email: form.email, message: form.message, subject: 'Website Contact Form' }),
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       });
 
@@ -66,7 +87,9 @@ export default function ContactPage() {
         setForm({ name: '', email: '', message: '' });
         setSuccess(true);
       } else {
-        setError('Failed to send message. Please try again.');
+        let msg = 'Failed to send message. Please try again.';
+        try { const d = await response.json(); if (d?.error) msg = d.error; } catch { /* keep default */ }
+        setError(msg);
       }
     } catch {
       setError('Network error. Please try again later.');
@@ -95,7 +118,7 @@ export default function ContactPage() {
 
         {/* Left: Info cards */}
         <aside className="contact-page__info">
-          {CONTACT_INFO.map((item) => (
+          {infoCards.map((item) => (
             <div key={item.label} className="contact-info-card">
               <span className="contact-info-card__icon">{item.icon}</span>
               <div>

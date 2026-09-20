@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { getCategoryTree, getBrands } from '@/lib/catalog';
+
+export const dynamic = 'force-dynamic';
 
 const TEAM_IMAGE =
   'https://images.pexels.com/photos/29267512/pexels-photo-29267512.jpeg?auto=compress&cs=tinysrgb&w=1200';
@@ -7,7 +10,7 @@ const FEATURES = [
   {
     icon: '🚚',
     title: 'Fast, Free Shipping',
-    text: 'Free delivery on every order over $100, with express options when you need it sooner.',
+    text: 'Clear delivery charges shown before you order, with free shipping above the store threshold.',
   },
   {
     icon: '🛡️',
@@ -26,13 +29,17 @@ const FEATURES = [
   },
 ];
 
-const STATS = [
-  { value: '30+', label: 'Curated Products' },
-  { value: '6',   label: 'Categories' },
-  { value: '4.6★', label: 'Avg. Rating' },
-];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Real numbers from the database (no made-up statistics)
+  const [tree, brands] = await Promise.all([getCategoryTree(), getBrands()]);
+  const productCount = tree.roots.reduce((s, c) => s + (c.count || 0), 0);
+  const STATS = [
+    { value: String(productCount), label: 'Products' },
+    { value: String(tree.flat.length), label: 'Categories' },
+    { value: String(brands.length), label: 'Brands' },
+  ].filter((s) => s.value !== '0');
+
   return (
     <div className="about-page">
 
@@ -43,9 +50,8 @@ export default function AboutPage() {
           <span className="about-page__eyebrow">Our Story</span>
           <h1 className="page-title about-page__title">About TechNest</h1>
           <p className="about-page__sub">
-            TechNest was built to make discovering great tech simple. We curate phones, laptops,
-            gaming gear, smart watches, and accessories from trusted brands — all in one clean
-            and fast shopping experience.
+            TechNest makes buying technology simple. From fiber, networking and CCTV hardware to phones,
+            laptops and accessories, we bring trusted brands together in one clean and fast shopping experience.
           </p>
         </div>
       </div>
@@ -82,8 +88,7 @@ export default function AboutPage() {
         {/* ── Footer note + CTA ── */}
         <div className="about-footer-note">
           <p className="static-page__text">
-            This platform is also a demonstration of a modern e-commerce front-end, built with
-            Next.js 14, Clerk auth, and Neon PostgreSQL.
+            Not sure what you need? Our team is happy to help you choose the right product.
           </p>
           <Link href="/products" className="btn btn--primary">
             Explore Products →

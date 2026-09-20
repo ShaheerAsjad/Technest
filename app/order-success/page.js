@@ -3,6 +3,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState as useLocalState } from 'react';
+import { formatPrice } from '@/lib/format';
 
 const STEPS = [
   { icon: '📋', title: 'Order Placed', desc: 'Your order has been confirmed.' },
@@ -14,7 +16,17 @@ const STEPS = [
 function OrderSuccessContent() {
   // ── Business logic — DO NOT MODIFY ────────────────────────────
   const searchParams = useSearchParams();
-  const orderId = searchParams.get('orderId') || '101';
+  const orderId = (searchParams.get('orderId') || '').replace(/[^0-9]/g, '');
+  const [order, setOrder] = useLocalState(null);
+
+  // Best-effort: show the real payment method and total (works for the signed-in owner)
+  useEffect(() => {
+    if (!orderId) return;
+    fetch(`/api/orders/${orderId}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setOrder(d))
+      .catch(() => {});
+  }, [orderId]);
   // ─────────────────────────────────────────────────────────────
 
   return (
@@ -31,19 +43,25 @@ function OrderSuccessContent() {
 
         <h1 className="success-title">Order Placed Successfully!</h1>
         <p className="success-sub">
-          Thank you for shopping with TechNest. Your order has been confirmed via Cash on Delivery.
+          Thank you for shopping with us. We have received your order and will contact you shortly to confirm delivery.
         </p>
 
         {/* Order Slip */}
         <div className="success-slip">
           <div className="success-slip__row">
             <span className="success-slip__label">Order ID</span>
-            <span className="success-slip__value">#{orderId}</span>
+            <span className="success-slip__value">{orderId ? `#${orderId}` : '—'}</span>
           </div>
           <div className="success-slip__row">
             <span className="success-slip__label">Payment Method</span>
-            <span className="success-slip__value">Cash on Delivery</span>
+            <span className="success-slip__value">{order?.payment_method || 'Cash on Delivery'}</span>
           </div>
+          {order && (
+            <div className="success-slip__row">
+              <span className="success-slip__label">Order Total</span>
+              <span className="success-slip__value">{formatPrice(order.total_amount)}</span>
+            </div>
+          )}
           <div className="success-slip__row">
             <span className="success-slip__label">Payment Status</span>
             <span className="success-slip__value success-slip__value--pending">Pending</span>
@@ -65,7 +83,7 @@ function OrderSuccessContent() {
 
         {/* CTAs */}
         <div className="success-actions">
-          <Link href={`/order-tracking?orderId=${orderId}`} className="btn btn--primary">
+          <Link href={orderId ? `/order-tracking?orderId=${orderId}` : '/order-tracking'} className="btn btn--primary">
             Track This Order →
           </Link>
           <Link href="/products" className="btn btn--ghost">

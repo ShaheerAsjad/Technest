@@ -1,0 +1,1092 @@
+{
+ "version": 1,
+ "note": "Demo catalogue compiled from the Atlantic Store reference videos (names, prices, categories, brands, photos). Stock values are demo values.",
+ "categories": [
+  {
+   "name": "SFP / QSFP",
+   "slug": "sfp-qsfp",
+   "parent": null,
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "GLC-T RJ45",
+   "slug": "glc-t-rj45",
+   "parent": "sfp-qsfp",
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "QSFP 100G",
+   "slug": "qsfp-100g",
+   "parent": "sfp-qsfp",
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "QSFP 40G",
+   "slug": "qsfp-40g",
+   "parent": "sfp-qsfp",
+   "department": "networking",
+   "sort": 3
+  },
+  {
+   "name": "SFP 10G",
+   "slug": "sfp-10g",
+   "parent": "sfp-qsfp",
+   "department": "networking",
+   "sort": 4
+  },
+  {
+   "name": "SFP 1G",
+   "slug": "sfp-1g",
+   "parent": "sfp-qsfp",
+   "department": "networking",
+   "sort": 5
+  },
+  {
+   "name": "Fiber Patch Cords",
+   "slug": "fiber-patch-cords",
+   "parent": null,
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "Single Mode (SM)",
+   "slug": "single-mode-sm",
+   "parent": "fiber-patch-cords",
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "Multi Mode (MM)",
+   "slug": "multi-mode-mm",
+   "parent": "fiber-patch-cords",
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "CCTV (Surveillance)",
+   "slug": "cctv",
+   "parent": null,
+   "department": "networking",
+   "sort": 3
+  },
+  {
+   "name": "Analog Cameras",
+   "slug": "analog-cameras",
+   "parent": "cctv",
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "IP Cameras",
+   "slug": "ip-cameras",
+   "parent": "cctv",
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "NVR",
+   "slug": "nvr",
+   "parent": "cctv",
+   "department": "networking",
+   "sort": 3
+  },
+  {
+   "name": "DVR",
+   "slug": "dvr",
+   "parent": "cctv",
+   "department": "networking",
+   "sort": 4
+  },
+  {
+   "name": "Networking Products",
+   "slug": "networking-products",
+   "parent": null,
+   "department": "networking",
+   "sort": 4
+  },
+  {
+   "name": "PoE Switches",
+   "slug": "poe-switches",
+   "parent": "networking-products",
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "Faceplates & Jacks",
+   "slug": "faceplates-and-jacks",
+   "parent": "networking-products",
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "Smart Cameras",
+   "slug": "smart-cameras",
+   "parent": null,
+   "department": "networking",
+   "sort": 5
+  },
+  {
+   "name": "Camera Kits",
+   "slug": "camera-kits",
+   "parent": "smart-cameras",
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "Tapo (TP-Link)",
+   "slug": "tapo-tp-link",
+   "parent": "smart-cameras",
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "Fiber",
+   "slug": "fiber",
+   "parent": null,
+   "department": "networking",
+   "sort": 6
+  },
+  {
+   "name": "Cable Testers",
+   "slug": "cable-testers",
+   "parent": "fiber",
+   "department": "networking",
+   "sort": 1
+  },
+  {
+   "name": "Crimping Tools",
+   "slug": "crimping-tools",
+   "parent": "fiber",
+   "department": "networking",
+   "sort": 2
+  },
+  {
+   "name": "Fiber Splitters",
+   "slug": "fiber-splitters",
+   "parent": "fiber",
+   "department": "networking",
+   "sort": 3
+  },
+  {
+   "name": "Fiber Strippers",
+   "slug": "fiber-strippers",
+   "parent": "fiber",
+   "department": "networking",
+   "sort": 4
+  },
+  {
+   "name": "Visual Fault Locator",
+   "slug": "visual-fault-locator",
+   "parent": "fiber",
+   "department": "networking",
+   "sort": 5
+  },
+  {
+   "name": "Racks",
+   "slug": "racks",
+   "parent": null,
+   "department": "networking",
+   "sort": 7
+  },
+  {
+   "name": "HDMI & AV",
+   "slug": "hdmi-and-av",
+   "parent": null,
+   "department": "networking",
+   "sort": 8
+  },
+  {
+   "name": "Patch Cables",
+   "slug": "patch-cables",
+   "parent": null,
+   "department": "networking",
+   "sort": 9
+  },
+  {
+   "name": "Fiber Accessories",
+   "slug": "fiber-accessories",
+   "parent": null,
+   "department": "networking",
+   "sort": 10
+  },
+  {
+   "name": "Rack Mount ODF (Metal)",
+   "slug": "rack-mount-odf-metal",
+   "parent": null,
+   "department": "networking",
+   "sort": 11
+  },
+  {
+   "name": "Huawei Products",
+   "slug": "huawei-products",
+   "parent": null,
+   "department": "networking",
+   "sort": 12
+  }
+ ],
+ "brands": [
+  {
+   "name": "Platinum",
+   "slug": "platinum",
+   "featured": true,
+   "sort": 0
+  },
+  {
+   "name": "Huawei",
+   "slug": "huawei",
+   "featured": true,
+   "sort": 1
+  },
+  {
+   "name": "Dahua",
+   "slug": "dahua",
+   "featured": true,
+   "sort": 2
+  },
+  {
+   "name": "D-Link",
+   "slug": "d-link",
+   "featured": true,
+   "sort": 3
+  },
+  {
+   "name": "PLT",
+   "slug": "plt",
+   "featured": true,
+   "sort": 4
+  },
+  {
+   "name": "Proskit",
+   "slug": "proskit",
+   "featured": true,
+   "sort": 5
+  },
+  {
+   "name": "DLC",
+   "slug": "dlc",
+   "featured": true,
+   "sort": 6
+  },
+  {
+   "name": "Corning",
+   "slug": "corning",
+   "featured": true,
+   "sort": 7
+  },
+  {
+   "name": "Ruijie",
+   "slug": "ruijie",
+   "featured": true,
+   "sort": 8
+  },
+  {
+   "name": "Tapo",
+   "slug": "tapo",
+   "featured": true,
+   "sort": 9
+  },
+  {
+   "name": "TP-Link",
+   "slug": "tp-link",
+   "featured": true,
+   "sort": 10
+  },
+  {
+   "name": "Mercusys",
+   "slug": "mercusys",
+   "featured": true,
+   "sort": 11
+  },
+  {
+   "name": "ZTE",
+   "slug": "zte",
+   "featured": false,
+   "sort": 12
+  },
+  {
+   "name": "3C",
+   "slug": "3c",
+   "featured": false,
+   "sort": 13
+  },
+  {
+   "name": "I-Pook",
+   "slug": "i-pook",
+   "featured": false,
+   "sort": 14
+  },
+  {
+   "name": "Hikvision",
+   "slug": "hikvision",
+   "featured": false,
+   "sort": 15
+  },
+  {
+   "name": "Generic",
+   "slug": "generic",
+   "featured": false,
+   "sort": 16
+  }
+ ],
+ "products": [
+  {
+   "sku": "ATL-PLT-SFP-001",
+   "title": "SFP 10G 80KM",
+   "brand": "Platinum",
+   "category": "sfp-10g",
+   "price": 95000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "10G SFP+ optical transceiver module for long-haul links up to 80 km.",
+   "specs": {
+    "Form factor": "SFP+",
+    "Speed": "10 Gbps",
+    "Reach": "80 km"
+   },
+   "image": "/products/sfp-10g-80km.jpg"
+  },
+  {
+   "sku": "ATL-PLT-SFP-002",
+   "title": "GLC-T 10G RJ45 Copper SFP",
+   "brand": "Platinum",
+   "category": "glc-t-rj45",
+   "price": 9900,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "10G RJ45 copper SFP+ module to connect copper Ethernet to SFP+ ports.",
+   "specs": {
+    "Form factor": "SFP+",
+    "Speed": "10 Gbps",
+    "Interface": "RJ45 copper"
+   },
+   "image": "/products/glc-t-10g-rj45-copper-sfp.jpg"
+  },
+  {
+   "sku": "ATL-PLT-SFP-003",
+   "title": "GLC-T 1G RJ45 Copper SFP",
+   "brand": "Platinum",
+   "category": "glc-t-rj45",
+   "price": 3150,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "1G RJ45 copper SFP module for gigabit copper links on SFP ports.",
+   "specs": {
+    "Form factor": "SFP",
+    "Speed": "1 Gbps",
+    "Interface": "RJ45 copper"
+   },
+   "image": "/products/glc-t-1g-rj45-copper-sfp.jpg"
+  },
+  {
+   "sku": "ATL-PLT-QSFP-001",
+   "title": "100G QSFP28 LR4 1310NM 20KM",
+   "brand": "Platinum",
+   "category": "qsfp-100g",
+   "price": 55000,
+   "originalPrice": null,
+   "stock": 3,
+   "featured": false,
+   "description": "100G QSFP28 LR4 optical transceiver, 1310 nm, up to 20 km.",
+   "specs": {
+    "Form factor": "QSFP28",
+    "Speed": "100 Gbps",
+    "Wavelength": "1310 nm",
+    "Reach": "20 km"
+   },
+   "image": "/products/100g-qsfp28-lr4-1310nm-20km.jpg"
+  },
+  {
+   "sku": "ATL-GEN-SPL-001",
+   "title": "FBT Ratio Fiber Splitter",
+   "brand": "Generic",
+   "category": "fiber-splitters",
+   "price": 350,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "FBT ratio fiber splitter for passive optical networks.",
+   "specs": {},
+   "image": "/products/fbt-ratio-fiber-splitter.jpg"
+  },
+  {
+   "sku": "ATL-GEN-MC-001",
+   "title": "Media Converter 10/100 Fiber to Ethernet",
+   "brand": "Generic",
+   "category": "fiber",
+   "price": 5850,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "Converts a 10/100 Mbps fiber link to RJ45 Ethernet.",
+   "specs": {
+    "Speed": "10/100 Mbps",
+    "Ports": "1 fiber + 1 RJ45"
+   },
+   "image": "/products/media-converter-10-100-fiber-to-ethernet.jpg"
+  },
+  {
+   "sku": "ATL-GEN-SPL-002",
+   "title": "PLC Fiber Splitter 1x4",
+   "brand": "Generic",
+   "category": "fiber-splitters",
+   "price": 365,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "1x4 PLC fiber splitter.",
+   "specs": {
+    "Split ratio": "1x4"
+   },
+   "image": "/products/plc-fiber-splitter-1x4.jpg"
+  },
+  {
+   "sku": "ATL-GEN-SPL-003",
+   "title": "PLC Fiber Splitter 1x8",
+   "brand": "Generic",
+   "category": "fiber-splitters",
+   "price": 425,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "1x8 PLC fiber splitter.",
+   "specs": {
+    "Split ratio": "1x8"
+   },
+   "image": "/products/plc-fiber-splitter-1x8.jpg"
+  },
+  {
+   "sku": "ATL-GEN-SPL-004",
+   "title": "PLC Fiber Splitter 1x16",
+   "brand": "Generic",
+   "category": "fiber-splitters",
+   "price": 800,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "1x16 PLC fiber splitter.",
+   "specs": {
+    "Split ratio": "1x16"
+   },
+   "image": "/products/plc-fiber-splitter-1x16.jpg"
+  },
+  {
+   "sku": "ATL-GEN-SPL-005",
+   "title": "PLC Fiber Splitter 1x2",
+   "brand": "Generic",
+   "category": "fiber-splitters",
+   "price": 265,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "1x2 PLC fiber splitter.",
+   "specs": {
+    "Split ratio": "1x2"
+   },
+   "image": "/products/plc-fiber-splitter-1x2.jpg"
+  },
+  {
+   "sku": "ATL-GEN-VFL-001",
+   "title": "VFL 10KM Visual Fault Locator",
+   "brand": "Generic",
+   "category": "visual-fault-locator",
+   "price": 2150,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Visual fault locator for tracing fiber breaks, up to 10 km.",
+   "specs": {
+    "Range": "10 km"
+   },
+   "image": "/products/vfl-10km-visual-fault-locator.jpg"
+  },
+  {
+   "sku": "ATL-GEN-VFL-002",
+   "title": "VFL 20KM Visual Fault Locator",
+   "brand": "Generic",
+   "category": "visual-fault-locator",
+   "price": 2550,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Visual fault locator for tracing fiber breaks, up to 20 km.",
+   "specs": {
+    "Range": "20 km"
+   },
+   "image": "/products/vfl-20km-visual-fault-locator.jpg"
+  },
+  {
+   "sku": "ATL-GEN-VFL-003",
+   "title": "VFL 30KM Visual Fault Locator",
+   "brand": "Generic",
+   "category": "visual-fault-locator",
+   "price": 3350,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "Visual fault locator for tracing fiber breaks, up to 30 km.",
+   "specs": {
+    "Range": "30 km"
+   },
+   "image": "/products/vfl-30km-visual-fault-locator.jpg"
+  },
+  {
+   "sku": "ATL-GEN-VFL-004",
+   "title": "VFL 40KM Visual Fault Locator",
+   "brand": "Generic",
+   "category": "visual-fault-locator",
+   "price": 3850,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Visual fault locator for tracing fiber breaks, up to 40 km.",
+   "specs": {
+    "Range": "40 km"
+   },
+   "image": "/products/vfl-40km-visual-fault-locator.jpg"
+  },
+  {
+   "sku": "ATL-PLT-TOOL-001",
+   "title": "PLT-AUA.6C Fiber Coating Remover",
+   "brand": "PLT",
+   "category": "crimping-tools",
+   "price": 5500,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Fiber coating remover / stripping tool.",
+   "specs": {},
+   "image": "/products/plt-aua-6c-fiber-coating-remover.jpg"
+  },
+  {
+   "sku": "ATL-PLT-TOOL-002",
+   "title": "PLT-FC-65 Fiber Cutter",
+   "brand": "PLT",
+   "category": "crimping-tools",
+   "price": 4500,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "High-precision fiber cleaver for splicing and termination.",
+   "specs": {},
+   "image": "/products/plt-fc-65-fiber-cutter.jpg"
+  },
+  {
+   "sku": "ATL-GEN-TOOL-001",
+   "title": "919 S2 Fiber Tool",
+   "brand": "Generic",
+   "category": "crimping-tools",
+   "price": 7200,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Handheld fiber test tool.",
+   "specs": {},
+   "image": "/products/919-s2-fiber-tool.jpg"
+  },
+  {
+   "sku": "ATL-PLT-TOOL-003",
+   "title": "ACT-811 Fiber Cleaver",
+   "brand": "PLT",
+   "category": "crimping-tools",
+   "price": 6400,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Fiber cable cleaver / sheath cutter.",
+   "specs": {},
+   "image": "/products/act-811-fiber-cleaver.jpg"
+  },
+  {
+   "sku": "ATL-GEN-TOOL-002",
+   "title": "CT-32 Fiber Cleaver",
+   "brand": "Generic",
+   "category": "crimping-tools",
+   "price": 7400,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "CT-32 fiber cleaver.",
+   "specs": {},
+   "image": "/products/ct-32-fiber-cleaver.jpg"
+  },
+  {
+   "sku": "ATL-GEN-TOOL-003",
+   "title": "M8 Piler Hot Peel Tool",
+   "brand": "Generic",
+   "category": "crimping-tools",
+   "price": 14500,
+   "originalPrice": null,
+   "stock": 0,
+   "featured": false,
+   "description": "Hot peel tool for fiber preparation.",
+   "specs": {},
+   "image": "/products/m8-piler-hot-peel-tool.jpg"
+  },
+  {
+   "sku": "ATL-PLT-STR-001",
+   "title": "PLT CFS-30 Fiber Stripper",
+   "brand": "PLT",
+   "category": "fiber-strippers",
+   "price": 2500,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Fiber stripper with precision blades.",
+   "specs": {},
+   "image": "/products/plt-cfs-30-fiber-stripper.jpg"
+  },
+  {
+   "sku": "ATL-PLT-STR-002",
+   "title": "PLT C-7FS-7 Fiber Stripper",
+   "brand": "PLT",
+   "category": "fiber-strippers",
+   "price": 3200,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Fiber stripper.",
+   "specs": {},
+   "image": "/products/plt-c-7fs-7-fiber-stripper.jpg"
+  },
+  {
+   "sku": "ATL-PLT-STR-003",
+   "title": "PLT 250UM Fiber Stripper",
+   "brand": "PLT",
+   "category": "fiber-strippers",
+   "price": 1500,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Fiber stripper for 250 um coated fiber.",
+   "specs": {
+    "Fiber size": "250 um"
+   },
+   "image": "/products/plt-250um-fiber-stripper.jpg"
+  },
+  {
+   "sku": "ATL-PRO-STR-001",
+   "title": "Proskit Round Fiber Cutter",
+   "brand": "Proskit",
+   "category": "fiber-strippers",
+   "price": 1850,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Proskit round fiber cutter / stripper.",
+   "specs": {},
+   "image": "/products/proskit-round-fiber-cutter.jpg"
+  },
+  {
+   "sku": "ATL-PLT-STR-004",
+   "title": "PLT CFS-3 Fiber Stripper",
+   "brand": "PLT",
+   "category": "fiber-strippers",
+   "price": 1050,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Three-hole fiber stripper.",
+   "specs": {},
+   "image": "/products/plt-cfs-3-fiber-stripper.jpg"
+  },
+  {
+   "sku": "ATL-DLK-TST-001",
+   "title": "D-Link Network Cable Tester",
+   "brand": "D-Link",
+   "category": "cable-testers",
+   "price": 1125,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Network cable tester for RJ45 / RJ11 continuity checks.",
+   "specs": {},
+   "image": "/products/d-link-network-cable-tester.jpg"
+  },
+  {
+   "sku": "ATL-GEN-TST-001",
+   "title": "Remote Network Cable Tester",
+   "brand": "Generic",
+   "category": "cable-testers",
+   "price": 1990,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Network cable tester with remote unit.",
+   "specs": {},
+   "image": "/products/remote-network-cable-tester.jpg"
+  },
+  {
+   "sku": "ATL-IPK-TST-001",
+   "title": "I-Pook Advanced Cable Tester",
+   "brand": "I-Pook",
+   "category": "cable-testers",
+   "price": 4700,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Advanced network cable tester and tone tracer.",
+   "specs": {},
+   "image": "/products/i-pook-advanced-cable-tester.jpg"
+  },
+  {
+   "sku": "ATL-COR-ODF-001",
+   "title": "Corning 24 Panel Unloaded",
+   "brand": "Corning",
+   "category": "rack-mount-odf-metal",
+   "price": 8900,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "Unloaded 24-port fiber patch panel for rack mounting.",
+   "specs": {
+    "Ports": "24",
+    "Loaded": "No (unloaded)"
+   },
+   "image": "/products/corning-24-panel-unloaded.jpg"
+  },
+  {
+   "sku": "ATL-HUA-PRT-001",
+   "title": "Huawei PRTE",
+   "brand": "Huawei",
+   "category": "huawei-products",
+   "price": 19500,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Huawei PRTE board.",
+   "specs": {},
+   "image": "/products/huawei-prte.jpg"
+  },
+  {
+   "sku": "ATL-HUA-SCN-001",
+   "title": "Huawei Scan Board",
+   "brand": "Huawei",
+   "category": "huawei-products",
+   "price": 55000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Huawei scan board.",
+   "specs": {},
+   "image": "/products/huawei-scan-board.jpg"
+  },
+  {
+   "sku": "ATL-PLT-ATB-001",
+   "title": "9102 SC 2 Port ATB Box IMP",
+   "brand": "Platinum",
+   "category": "fiber-accessories",
+   "price": 285,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "SC 2-port ATB (access termination) box.",
+   "specs": {
+    "Ports": "2",
+    "Connector": "SC"
+   },
+   "image": "/products/9102-sc-2-port-atb-box-imp.jpg"
+  },
+  {
+   "sku": "ATL-3C-JCK-001",
+   "title": "3C CAT 6 Jack Copper",
+   "brand": "3C",
+   "category": "faceplates-and-jacks",
+   "price": 790,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "CAT6 keystone jack, copper.",
+   "specs": {
+    "Category": "CAT6"
+   },
+   "image": "/products/3c-cat-6-jack-copper.jpg"
+  },
+  {
+   "sku": "ATL-DLC-FP-002",
+   "title": "DLC Face Plate 2G",
+   "brand": "DLC",
+   "category": "faceplates-and-jacks",
+   "price": 200,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "2-port wall face plate.",
+   "specs": {
+    "Ports": "2"
+   },
+   "image": "/products/dlc-face-plate-2g.jpg"
+  },
+  {
+   "sku": "ATL-DLC-FP-001",
+   "title": "DLC Face Plate 1G",
+   "brand": "DLC",
+   "category": "faceplates-and-jacks",
+   "price": 190,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "1-port wall face plate.",
+   "specs": {
+    "Ports": "1"
+   },
+   "image": "/products/dlc-face-plate-1g.jpg"
+  },
+  {
+   "sku": "ATL-DLC-PC-005",
+   "title": "DLC Patch Cord 5 MTR",
+   "brand": "DLC",
+   "category": "patch-cables",
+   "price": 750,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Ethernet patch cord, 5 metres.",
+   "specs": {
+    "Length": "5 m"
+   },
+   "image": "/products/dlc-patch-cord-5-mtr.jpg"
+  },
+  {
+   "sku": "ATL-DLC-PC-003",
+   "title": "DLC Patch Cord 3 MTR",
+   "brand": "DLC",
+   "category": "patch-cables",
+   "price": 450,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Ethernet patch cord, 3 metres.",
+   "specs": {
+    "Length": "3 m"
+   },
+   "image": "/products/dlc-patch-cord-3-mtr.jpg"
+  },
+  {
+   "sku": "ATL-DLC-PC-001",
+   "title": "DLC Patch Cord 1 MTR",
+   "brand": "DLC",
+   "category": "patch-cables",
+   "price": 300,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "Ethernet patch cord, 1 metre.",
+   "specs": {
+    "Length": "1 m"
+   },
+   "image": "/products/dlc-patch-cord-1-mtr.jpg"
+  },
+  {
+   "sku": "ATL-DAHPOE-001",
+   "title": "Dahua DH-PFS3010-8GT-65 8-Port Gigabit PoE Switch",
+   "brand": "Dahua",
+   "category": "poe-switches",
+   "price": 11000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": true,
+   "description": "8-port gigabit PoE switch.",
+   "specs": {
+    "Ports": "8 x Gigabit",
+    "PoE": "Yes"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHPOE-002",
+   "title": "Dahua DH-PFS3226-24ET-240 26-Port Switch",
+   "brand": "Dahua",
+   "category": "poe-switches",
+   "price": 65000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "26-port PoE switch.",
+   "specs": {
+    "Ports": "26"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHPOE-003",
+   "title": "Dahua DH-CS4010-8ET-60 8-Port PoE Switch",
+   "brand": "Dahua",
+   "category": "poe-switches",
+   "price": 15000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "8-port PoE switch.",
+   "specs": {
+    "Ports": "8",
+    "PoE": "Yes"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHIP-001",
+   "title": "Dahua DH-IPC-HDW1431P-S4 4MP Dome Camera",
+   "brand": "Dahua",
+   "category": "ip-cameras",
+   "price": 12500,
+   "originalPrice": 13500,
+   "stock": 25,
+   "featured": false,
+   "description": "4MP IP dome camera.",
+   "specs": {
+    "Resolution": "4 MP",
+    "Type": "Dome"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHIP-002",
+   "title": "Dahua DH-IPC-HFW1239TU-A-IC 2MP IP Camera",
+   "brand": "Dahua",
+   "category": "ip-cameras",
+   "price": 11000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "2MP IP camera.",
+   "specs": {
+    "Resolution": "2 MP"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHIP-003",
+   "title": "Dahua DH-IPC-HFW143151 4MP IP Camera",
+   "brand": "Dahua",
+   "category": "ip-cameras",
+   "price": 14000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "4MP IP camera.",
+   "specs": {
+    "Resolution": "4 MP"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHAN-001",
+   "title": "Dahua DH-HAC-TIA1P-U HDCVI Camera",
+   "brand": "Dahua",
+   "category": "analog-cameras",
+   "price": 4200,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "HDCVI analog camera.",
+   "specs": {
+    "Type": "HDCVI"
+   },
+   "image": "/placeholder.svg"
+  },
+  {
+   "sku": "ATL-DAHAN-002",
+   "title": "Dahua DH-HAC-HFW1220DQL-12-A HDCVI Camera",
+   "brand": "Dahua",
+   "category": "analog-cameras",
+   "price": 75000,
+   "originalPrice": null,
+   "stock": 25,
+   "featured": false,
+   "description": "HDCVI camera (price copied from the reference site - please verify).",
+   "specs": {
+    "Type": "HDCVI"
+   },
+   "image": "/placeholder.svg"
+  }
+ ],
+ "settings": {
+  "store": {
+   "name": "TechNest",
+   "phone": "",
+   "whatsapp": "",
+   "email": "",
+   "address": "",
+   "hours": "",
+   "facebook": "",
+   "instagram": ""
+  },
+  "announcement": {
+   "enabled": true,
+   "messages": [
+    "Free shipping on orders over Rs. 5,000",
+    "10% discount - use code SAVE10 at checkout",
+    "Cash on Delivery available across Pakistan"
+   ]
+  },
+  "shipping": {
+   "enabled": true,
+   "defaultFee": 350,
+   "freeEnabled": true,
+   "freeThreshold": 5000,
+   "minOrder": 0,
+   "etaText": "3-5 business days",
+   "zones": [
+    {
+     "id": "lahore",
+     "name": "Lahore",
+     "cities": [
+      "lahore"
+     ],
+     "fee": 200,
+     "freeThreshold": null,
+     "eta": "1-2 business days"
+    },
+    {
+     "id": "punjab",
+     "name": "Punjab",
+     "cities": [
+      "faisalabad",
+      "multan",
+      "gujranwala",
+      "sialkot",
+      "rawalpindi",
+      "islamabad",
+      "sargodha",
+      "bahawalpur",
+      "sahiwal",
+      "kasur",
+      "sheikhupura",
+      "gujrat",
+      "jhelum"
+     ],
+     "fee": 300,
+     "freeThreshold": null,
+     "eta": "2-3 business days"
+    }
+   ]
+  },
+  "tax": {
+   "enabled": false,
+   "rate": 0,
+   "label": "GST",
+   "inclusive": false,
+   "onShipping": false
+  },
+  "payment": {
+   "codEnabled": true,
+   "codFee": 0,
+   "bankTransferEnabled": false,
+   "bankInstructions": ""
+  }
+ },
+ "coupons": [
+  {
+   "code": "SAVE10",
+   "type": "percent",
+   "value": 10,
+   "minOrder": 0
+  }
+ ]
+}

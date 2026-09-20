@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
 import sql from '@/lib/db';
+import { formatPrice } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,7 @@ export default async function MyOrdersPage() {
                   {itemsList.map((item, idx) => (
                     <div key={idx} className="order-card__item-row">
                       <span>{item.name || item.title || 'Product'} <span className="order-card__qty">× {item.quantity || 1}</span></span>
-                      <span className="order-card__item-price">${(Number(item.price) * (item.quantity || 1)).toFixed(2)}</span>
+                      <span className="order-card__item-price">{formatPrice(Number(item.price) * (item.quantity || 1))}</span>
                     </div>
                   ))}
                 </div>
@@ -111,8 +112,8 @@ export default async function MyOrdersPage() {
                 {/* Footer row */}
                 <div className="order-card__footer">
                   <div>
-                    <span className="order-card__label">Total Paid (COD)</span>
-                    <span className="order-card__total">${Number(order.total_amount).toFixed(2)}</span>
+                    <span className="order-card__label">Total ({order.payment_method || 'Cash on Delivery'})</span>
+                    <span className="order-card__total">{formatPrice(Number(order.total_amount))}</span>
                   </div>
                   <Link
                     href={`/order-tracking?orderId=${order.id}`}

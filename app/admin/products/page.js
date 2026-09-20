@@ -10,8 +10,12 @@ const EMPTY_PRODUCT_FORM = {
   stock: '',
   image: '',
   categoryId: '',
+  sku: '',
+  brand: '',
+  taxRate: '',
   isOnSale: false,
   isFeatured: false,
+  freeShipping: false,
 };
 
 export default function AdminProductsPage() {
@@ -277,10 +281,28 @@ export default function AdminProductsPage() {
                   <option value="">Select Category...</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.label || c.name}
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>SKU / Model no.</label>
+                <input id="prod-sku" style={{ ...inputStyle }} placeholder="e.g. ATL-SFP-001" maxLength={80}
+                  value={form.sku} onChange={(e) => setForm((p) => ({ ...p, sku: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Brand</label>
+                <input id="prod-brand" style={{ ...inputStyle }} placeholder="e.g. Huawei" maxLength={120}
+                  value={form.brand} onChange={(e) => setForm((p) => ({ ...p, brand: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Tax % (blank = store default)</label>
+                <input id="prod-tax" type="number" min="0" max="100" step="0.01" style={{ ...inputStyle }} placeholder="store default"
+                  value={form.taxRate} onChange={(e) => setForm((p) => ({ ...p, taxRate: e.target.value }))} />
               </div>
             </div>
 
@@ -412,6 +434,14 @@ export default function AdminProductsPage() {
                   onChange={(e) => setForm((p) => ({ ...p, isFeatured: e.target.checked }))}
                 />
                 Feature on Homepage
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#d4d4d8', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={form.freeShipping}
+                  onChange={(e) => setForm((p) => ({ ...p, freeShipping: e.target.checked }))}
+                />
+                Free shipping on this product
               </label>
             </div>
 

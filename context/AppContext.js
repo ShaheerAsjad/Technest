@@ -1,14 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { PRODUCTS } from '@/data/products';
+import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 
 const AppContext = createContext(null);
-
-export const TAX_RATE = 0.05;
-export const FREE_SHIPPING_THRESHOLD = 100;
-export const STANDARD_SHIPPING_COST = 9.99;
-export const EXPRESS_SHIPPING_COST = 19.99;
 
 function loadJSON(key, fallback) {
   if (typeof window === 'undefined') return fallback;
@@ -20,52 +14,85 @@ function loadJSON(key, fallback) {
   }
 }
 
+function saveJSON(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* private mode / quota exceeded - the app keeps working in memory */
+  }
+}
+
+/** Corrupt or old cart data can never crash the app. */
+function cleanCart(raw) {
+  if (!Array.isArray(raw)) return [];
+  const map = new Map();
+  for (const it of raw) {
+    const id = String(it?.productId ?? it?.id ?? '').trim();
+    const qty = Math.floor(Number(it?.quantity ?? 1));
+    if (!id || !Number.isFinite(qty) || qty < 1) continue;
+    map.set(id, Math.min(99, (map.get(id) || 0) + qty));
+  }
+  return [...map.entries()].map(([productId, quantity]) => ({ productId, quantity }));
+}
+
 export function AppProvider({ children }) {
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [theme, setTheme] = useState('dark');
   const [toasts, setToasts] = useState([]);
   const [mounted, setMounted] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const wishlistRef = useRef([]);
 
   // Load persisted state once, on first mount (client only).
   useEffect(() => {
-    setCart(loadJSON('technest_cart', []));
-    setWishlist(loadJSON('technest_wishlist', []));
-    setTheme(loadJSON('technest_theme', 'dark'));
+    setCart(cleanCart(loadJSON('technest_cart', [])));
+    const wl = loadJSON('technest_wishlist', []);
+    setWishlist(Array.isArray(wl) ? wl.map(String) : []);
+    const th = loadJSON('technest_theme', 'dark');
+    setTheme(th === 'light' ? 'light' : 'dark');
     setMounted(true);
   }, []);
 
+  useEffect(() => { if (mounted) saveJSON('technest_cart', cart); }, [cart, mounted]);
+  useEffect(() => { wishlistRef.current = wishlist; if (mounted) saveJSON('technest_wishlist', wishlist); }, [wishlist, mounted]);
   useEffect(() => {
-    if (mounted) localStorage.setItem('technest_cart', JSON.stringify(cart));
-  }, [cart, mounted]);
-
-  useEffect(() => {
-    if (mounted) localStorage.setItem('technest_wishlist', JSON.stringify(wishlist));
-  }, [wishlist, mounted]);
-
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem('technest_theme', JSON.stringify(theme));
-      document.documentElement.setAttribute('data-theme', theme);
-    }
+    if (!mounted) return;
+    saveJSON('technest_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme, mounted]);
+
+  // Keep several open tabs in sync.
+  useEffect(() => {
+    function onStorage(e) {
+      if (e.key === 'technest_cart') setCart(cleanCart(loadJSON('technest_cart', [])));
+      if (e.key === 'technest_wishlist') {
+        const wl = loadJSON('technest_wishlist', []);
+        setWishlist(Array.isArray(wl) ? wl.map(String) : []);
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message, type }]);
+    setToasts((t) => [...t.slice(-3), { id, message, type }]);
     setTimeout(() => setToasts((t) => t.filter((toast) => toast.id !== id)), 3000);
   }, []);
 
   const addToCart = useCallback(
     (productId, quantity = 1) => {
+      const id = String(productId);
+      const qty = Math.max(1, Math.floor(Number(quantity) || 1));
       setCart((prev) => {
-        const existing = prev.find((i) => i.productId === productId);
+        const existing = prev.find((i) => String(i.productId) === id);
         if (existing) {
           return prev.map((i) =>
-            i.productId === productId ? { ...i, quantity: i.quantity + quantity } : i
+            String(i.productId) === id ? { ...i, quantity: Math.min(99, i.quantity + qty) } : i
           );
         }
-        return [...prev, { productId, quantity }];
+        return [...prev, { productId: id, quantity: Math.min(99, qty) }];
       });
       showToast('Added to cart');
     },
@@ -73,15 +100,17 @@ export function AppProvider({ children }) {
   );
 
   const updateQuantity = useCallback((productId, quantity) => {
+    const id = String(productId);
     setCart((prev) => {
-      if (quantity <= 0) return prev.filter((i) => i.productId !== productId);
-      return prev.map((i) => (i.productId === productId ? { ...i, quantity } : i));
+      if (quantity <= 0) return prev.filter((i) => String(i.productId) !== id);
+      return prev.map((i) => (String(i.productId) === id ? { ...i, quantity: Math.min(99, Math.floor(quantity)) } : i));
     });
   }, []);
 
   const removeFromCart = useCallback(
     (productId) => {
-      setCart((prev) => prev.filter((i) => i.productId !== productId));
+      const id = String(productId);
+      setCart((prev) => prev.filter((i) => String(i.productId) !== id));
       showToast('Item removed', 'danger');
     },
     [showToast]
@@ -91,35 +120,27 @@ export function AppProvider({ children }) {
 
   const toggleWishlist = useCallback(
     (productId) => {
-      setWishlist((prev) => {
-        const isIn = prev.includes(productId);
-        showToast(isIn ? 'Removed from wishlist' : 'Added to wishlist');
-        return isIn ? prev.filter((id) => id !== productId) : [...prev, productId];
-      });
+      const id = String(productId);
+      const isIn = wishlistRef.current.map(String).includes(id);
+      setWishlist((prev) => (prev.map(String).includes(id) ? prev.filter((x) => String(x) !== id) : [...prev, id]));
+      showToast(isIn ? 'Removed from wishlist' : 'Added to wishlist');
     },
     [showToast]
   );
 
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
-  }, []);
-
-  const cartDetailed = cart
-    .map((item) => {
-      const product = PRODUCTS.find((p) => p.id === item.productId);
-      return product ? { ...product, quantity: item.quantity } : null;
-    })
-    .filter(Boolean);
-
-  const subtotal = cartDetailed.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const toggleTheme = useCallback(() => setTheme((t) => (t === 'dark' ? 'light' : 'dark')), []);
+  const openCart = useCallback(() => setCartOpen(true), []);
+  const closeCart = useCallback(() => setCartOpen(false), []);
 
   const value = {
     mounted,
     cart,
-    cartDetailed,
     wishlist,
     theme,
     toasts,
+    cartOpen,
+    openCart,
+    closeCart,
     addToCart,
     updateQuantity,
     removeFromCart,
@@ -127,10 +148,9 @@ export function AppProvider({ children }) {
     toggleWishlist,
     toggleTheme,
     showToast,
-    isInWishlist: (id) => wishlist.includes(id),
+    isInWishlist: (id) => wishlist.map(String).includes(String(id)),
     cartCount: cart.reduce((s, i) => s + i.quantity, 0),
     wishlistCount: wishlist.length,
-    subtotal,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

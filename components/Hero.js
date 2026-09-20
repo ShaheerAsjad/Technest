@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import DropCountdown from './DropCountdown';
 
 // Three.js canvas — client-side only, no SSR
 const ParticleHero = dynamic(() => import('./ParticleHero'), {
@@ -11,7 +10,7 @@ const ParticleHero = dynamic(() => import('./ParticleHero'), {
   loading: () => null,
 });
 
-export default function Hero() {
+export default function Hero({ freeShippingText = '' }) {
   const sectionRef = useRef(null);
   const contentRef = useRef(null);
   const overlayRef = useRef(null);
@@ -65,27 +64,25 @@ export default function Hero() {
       <div className="hero__content" ref={contentRef}>
         <span className="hero__badge" style={{ borderColor: 'rgba(255,102,0,0.3)', background: 'rgba(255,102,0,0.05)' }}>
           <span style={{ color: '#FF6600', fontSize: '10px' }}>✦</span>
-          &nbsp;TechNest Exclusive Drops
+          &nbsp;Networking, CCTV &amp; IT Hardware
         </span>
 
-        <DropCountdown />
-
         <h1 className="hero__title">
-          Next-Gen Tech<br />
-          <em style={{ color: '#FF6600', WebkitTextFillColor: 'initial' }}>For Creators.</em>
+          Reliable Hardware<br />
+          <em style={{ color: '#FF6600', WebkitTextFillColor: 'initial' }}>For Every Network.</em>
         </h1>
 
         <p className="hero__subtitle">
-          Unleash your potential with high-end phones, laptops, and gaming gear.<br />
-          Engineered for performance, designed for the future.
+          Fiber, switches, CCTV, racks and accessories from trusted brands &mdash;<br />
+          alongside the latest phones, laptops and gaming gear.
         </p>
 
         <div className="hero__cta-row">
           <Link href="/products" className="btn btn--primary hero__cta" style={{ background: '#FF6600', color: '#000', boxShadow: '0 0 20px rgba(255,102,0,0.4)' }}>
             Shop Now
           </Link>
-          <Link href="/categories" className="btn btn--ghost hero__cta-secondary" style={{ borderColor: 'rgba(255,102,0,0.3)', color: '#FF6600' }}>
-            Explore Categories →
+          <Link href="/products?dept=networking" className="btn btn--ghost hero__cta-secondary" style={{ borderColor: 'rgba(255,102,0,0.3)', color: '#FF6600' }}>
+            Networking &amp; IT →
           </Link>
         </div>
 
@@ -93,7 +90,7 @@ export default function Hero() {
         <div className="hero__trust">
           <span className="hero__trust-item">
             <span className="hero__trust-dot" style={{ background: '#FF6600', boxShadow: '0 0 8px #FF6600' }} />
-            Free Shipping $100+
+            {freeShippingText || 'Nationwide Delivery'}
           </span>
           <span className="hero__trust-sep" aria-hidden="true">·</span>
           <span className="hero__trust-item">
@@ -103,7 +100,7 @@ export default function Hero() {
           <span className="hero__trust-sep" aria-hidden="true">·</span>
           <span className="hero__trust-item">
             <span className="hero__trust-dot" style={{ background: '#FF6600', boxShadow: '0 0 8px #FF6600' }} />
-            Easy Returns
+            Genuine Products
           </span>
         </div>
       </div>

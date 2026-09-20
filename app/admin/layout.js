@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { href: '/admin/orders',     label: 'Orders',        module: 'orders',    icon: '▤' },
   { href: '/admin/products',   label: 'Inventory',     module: 'inventory', icon: '▦' },
   { href: '/admin/coupons',    label: 'Coupons',       module: 'coupons',   icon: '◈' },
+  { href: '/admin/categories', label: 'Categories',    module: 'inventory', icon: '🗂' },
+  { href: '/admin/settings',   label: 'Store Settings', module: null, adminOnly: true, icon: '⚙' },
   { href: '/admin/support',    label: 'Support Inbox', module: 'support',   icon: '✉' },
   { href: '/admin/staff',      label: 'Staff & Roles', module: null, adminOnly: true, icon: '◉' },
   { href: '/admin/audit-logs', label: 'Audit Logs',    module: null, adminOnly: true, icon: '☰' },

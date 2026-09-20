@@ -3,20 +3,36 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/migrate.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/migrate.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check": "node scripts/verify.mjs && node scripts/test-pricing.mjs && npm run build",
+    "verify": "node scripts/verify.mjs",
+    "test:pricing": "node scripts/test-pricing.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "node scripts/seed.mjs",
+    "db:seed:remove": "node scripts/seed.mjs --remove",
+    "db:backup": "node scripts/backup.mjs",
+    "import:products": "node scripts/import-products.mjs",
+    "make-admin": "node scripts/make-admin.mjs"
   },
   "dependencies": {
+    "@clerk/backend": "^3.18.1",
     "@clerk/nextjs": "^7.7.6",
     "@clerk/themes": "^2.4.57",
     "@neondatabase/serverless": "^1.1.0",
+    "@next/swc-win32-x64-msvc": "^16.3.5",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.7.0",
     "svix": "^1.42.0",
     "three": "^0.185.1"
+  },
+  "engines": {
+    "node": ">=18.18.0"
   }
 }

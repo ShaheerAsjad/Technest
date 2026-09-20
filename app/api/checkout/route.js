@@ -1,96 +1,136 @@
-import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import sql from '@/lib/db';
+import { json, readJson, serverError, NO_STORE, clientIp } from '@/lib/api';
+import { getStoreSettings } from '@/lib/settings';
+import { computePricing } from '@/lib/pricing';
+import { loadCartLines, findCouponByCode, reserveStock, releaseStock, PAYMENT_LABELS } from '@/lib/checkout';
+import { normalizePkPhone, cleanText, isValidEmail } from '@/lib/validators';
+import { rateLimit } from '@/lib/ratelimit';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * POST /api/checkout
+ * The server is the single source of truth: prices, stock, shipping, tax and coupon are ALL
+ * recomputed here from the database. Anything the browser sends about money is ignored.
+ */
 export async function POST(request) {
+  let reservedLines = [];
+  let reservedIds = [];
   try {
     const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized. Please log in to place an order.' }, { status: 401 });
+    if (!userId) return json({ error: 'Please sign in to place an order.' }, 401, NO_STORE);
+
+    if (!(await rateLimit(`checkout:${userId}`, 12, 600)) || !(await rateLimit(`checkout-ip:${clientIp(request)}`, 30, 600))) {
+      return json({ error: 'Too many attempts. Please wait a few minutes and try again.' }, 429, NO_STORE);
     }
 
-    const { name, phone, address, city, cartItems, totalAmount } = await request.json();
+    const body = await readJson(request);
+    if (!body) return json({ error: 'Invalid request.' }, 400, NO_STORE);
 
-    if (!name || !phone || !address || !cartItems || cartItems.length === 0) {
-      return NextResponse.json({ error: 'Missing required fields or empty cart' }, { status: 400 });
+    // ---- validate customer details ---------------------------------------
+    const name = cleanText(body.name, 100);
+    const address = cleanText(body.address, 300);
+    const city = cleanText(body.city, 60);
+    const notes = cleanText(body.notes, 500);
+    const phone = normalizePkPhone(body.phone);
+    const email = cleanText(body.email, 120);
+    const idem = /^[A-Za-z0-9_-]{8,80}$/.test(String(body.idempotencyKey || '')) ? String(body.idempotencyKey) : null;
+
+    if (name.length < 2) return json({ error: 'Please enter your full name.' }, 400, NO_STORE);
+    if (!phone) return json({ error: 'Enter a valid Pakistani mobile number (e.g. 03001234567).' }, 400, NO_STORE);
+    if (address.length < 6) return json({ error: 'Please enter your full delivery address.' }, 400, NO_STORE);
+    if (city.length < 2) return json({ error: 'Please enter your city.' }, 400, NO_STORE);
+    if (email && !isValidEmail(email)) return json({ error: 'Email address looks invalid.' }, 400, NO_STORE);
+
+    const settings = await getStoreSettings({ fresh: true });
+    const paymentMethod = body.paymentMethod === 'bank' ? 'bank' : 'cod';
+    if (paymentMethod === 'cod' && !settings.payment.codEnabled) {
+      return json({ error: 'Cash on Delivery is currently unavailable.' }, 400, NO_STORE);
+    }
+    if (paymentMethod === 'bank' && !settings.payment.bankTransferEnabled) {
+      return json({ error: 'Bank transfer is currently unavailable.' }, 400, NO_STORE);
     }
 
-    // Ensure orders table exists and has user_id column
-    await sql`
-      CREATE TABLE IF NOT EXISTS orders (
-        id SERIAL PRIMARY KEY,
-        user_id VARCHAR(255),
-        customer_name VARCHAR(255),
-        phone VARCHAR(100),
-        address TEXT,
-        city VARCHAR(100),
-        items JSONB,
-        total_amount NUMERIC(10, 2),
-        payment_method VARCHAR(100) DEFAULT 'Cash on Delivery',
-        status VARCHAR(100) DEFAULT 'Order Placed',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
+    // ---- idempotency: double click / retry returns the SAME order --------
+    if (idem) {
+      const dup = await sql`SELECT id, total_amount FROM orders WHERE idempotency_key = ${idem} AND user_id = ${userId} LIMIT 1`;
+      if (dup[0]) return json({ success: true, orderId: dup[0].id, total: Number(dup[0].total_amount), duplicate: true }, 200, NO_STORE);
+    }
 
+    // ---- authoritative cart + pricing -------------------------------------
+    const { lines, problems } = await loadCartLines(body.items ?? body.cartItems, { clip: false });
+    if (problems.length) return json({ error: problems[0].message, problems }, 409, NO_STORE);
+    if (!lines.length) return json({ error: 'Your cart is empty.' }, 400, NO_STORE);
+
+    const { coupon, error: couponLookupError } = await findCouponByCode(body.coupon);
+    if (String(body.coupon || '').trim() && (couponLookupError || !coupon)) {
+      return json({ error: couponLookupError || 'Invalid coupon code.' }, 400, NO_STORE);
+    }
+    const pricing = computePricing({ items: lines, settings, city, coupon, paymentMethod });
+    if (pricing.couponError) return json({ error: pricing.couponError }, 400, NO_STORE);
+    if (pricing.minOrderProblem) return json({ error: pricing.minOrderProblem }, 400, NO_STORE);
+
+    // ---- 1) reserve stock atomically ---------------------------------------
+    const reservation = await reserveStock(lines);
+    reservedLines = lines;
+    reservedIds = reservation.reserved;
+    if (!reservation.ok) {
+      await releaseStock(lines, reservedIds);
+      reservedIds = [];
+      return json({ error: 'Sorry, one of the items just went out of stock. Please review your cart.' }, 409, NO_STORE);
+    }
+
+    // ---- 2) create the order ----------------------------------------------
+    const orderItems = lines.map((l) => ({
+      id: l.id, name: l.name, sku: l.sku, price: l.price, quantity: l.quantity, image: l.image, slug: l.slug,
+    }));
+    const snapshot = { ...pricing, items: undefined, city, paymentMethod };
+    let orderId;
     try {
-      await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);`;
-    } catch (e) {
-      // Column exists or alter statement ignored
-    }
-
-    // 1. Transaction Start
-    await sql`BEGIN`;
-
-    // 2. Insert Order with user_id
-    const orderResult = await sql`
-      INSERT INTO orders (user_id, customer_name, phone, address, city, items, total_amount, payment_method, status)
-      VALUES (${userId}, ${name}, ${phone}, ${address}, ${city}, ${JSON.stringify(cartItems)}, ${totalAmount}, 'Cash on Delivery', 'Order Placed')
-      RETURNING id;
-    `;
-    const orderRows = Array.isArray(orderResult) ? orderResult : (orderResult.rows || []);
-    const orderId = orderRows[0]?.id;
-
-    // 3. Stock Deduction loop with availability check
-    for (const item of cartItems) {
-      const productId = item.id;
-      const quantity = item.quantity || 1;
-
-      // Stock check: Kya product available hai?
-      const productResult = await sql`SELECT stock FROM products WHERE id = ${productId}`;
-      const productRows = Array.isArray(productResult) ? productResult : (productResult.rows || []);
-
-      if (!productRows || productRows.length === 0) {
-        throw new Error(`Product not found (ID: ${productId})`);
-      }
-
-      const currentStock = productRows[0].stock;
-      if (currentStock < quantity) {
-        throw new Error(`Insufficient stock for ${item.name || 'item'}. Available: ${currentStock}, Requested: ${quantity}`);
-      }
-
-      // Stock update
-      await sql`
-        UPDATE products 
-        SET stock = stock - ${quantity} 
-        WHERE id = ${productId}
+      const rows = await sql`
+        INSERT INTO orders (user_id, customer_name, phone, address, city, items, total_amount, payment_method, status,
+                            subtotal, discount_amount, coupon_code, shipping_fee, tax_amount, cod_fee, pricing_snapshot,
+                            notes, idempotency_key)
+        VALUES (${userId}, ${name}, ${phone}, ${address}, ${city}, ${JSON.stringify(orderItems)}::jsonb,
+                ${pricing.total}, ${PAYMENT_LABELS[paymentMethod]}, 'Order Placed',
+                ${pricing.subtotal}, ${pricing.discount}, ${pricing.couponCode}, ${pricing.shipping}, ${pricing.tax}, ${pricing.codFee},
+                ${JSON.stringify(snapshot)}::jsonb, ${notes || null}, ${idem})
+        RETURNING id
       `;
+      orderId = rows[0]?.id;
+      if (!orderId) throw new Error('Order insert returned no id');
+    } catch (insertErr) {
+      await releaseStock(lines, reservedIds).catch((e) => console.error('[checkout] release after insert failure:', e?.message));
+      reservedIds = [];
+      if (String(insertErr?.message).includes('orders_idem_uq')) {
+        const dup = await sql`SELECT id, total_amount FROM orders WHERE idempotency_key = ${idem} LIMIT 1`;
+        if (dup[0]) return json({ success: true, orderId: dup[0].id, total: Number(dup[0].total_amount), duplicate: true }, 200, NO_STORE);
+      }
+      throw insertErr;
     }
 
-    // 4. Commit (Save changes)
-    await sql`COMMIT`;
-
-    return NextResponse.json({ success: true, message: 'Order placed and stock updated successfully!', orderId });
-
-  } catch (error) {
-    // Agar koi error aya toh changes cancel
-    try {
-      await sql`ROLLBACK`;
-    } catch (rollbackErr) {
-      console.error('Rollback Error:', rollbackErr);
+    // ---- 3) count the coupon use (respecting max_uses) ------------------------
+    if (pricing.couponCode) {
+      const used = await sql`
+        UPDATE coupons SET used_count = used_count + 1
+        WHERE UPPER(code) = ${pricing.couponCode} AND (max_uses IS NULL OR used_count < max_uses)
+        RETURNING id
+      `;
+      if (!used[0]) {
+        await sql`DELETE FROM orders WHERE id = ${orderId}`;
+        await releaseStock(lines, reservedIds);
+        reservedIds = [];
+        return json({ error: 'This coupon has just reached its usage limit. Please remove it and try again.' }, 409, NO_STORE);
+      }
     }
-    console.error('Checkout Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    reservedIds = []; // committed - nothing to roll back any more
+    return json({ success: true, orderId, total: pricing.total }, 200, NO_STORE);
+  } catch (err) {
+    if (reservedLines.length && reservedIds.length) {
+      await releaseStock(reservedLines, reservedIds).catch((e) => console.error('[checkout] rollback failed:', e?.message));
+    }
+    return serverError('api/checkout', err, 'We could not place your order. Nothing was charged. Please try again.');
   }
 }

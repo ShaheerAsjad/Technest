@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { CATEGORIES } from '@/data/products';
 
 /* ─── Custom line-icons (stroke-based, matches the cyan/amber theme) ─── */
 function IconPhone() {
@@ -60,44 +59,108 @@ function IconAccessory() {
   );
 }
 
-const CATEGORY_META = {
-  'Phones':        { Icon: IconPhone,       desc: 'Flagship & mid-range' },
-  'Laptops':       { Icon: IconLaptop,      desc: 'Work & creative' },
-  'Headphones':    { Icon: IconHeadphones,  desc: 'Studio & wireless' },
-  'Gaming':        { Icon: IconGaming,      desc: 'Consoles & gear' },
-  'Smart Watches': { Icon: IconWatch,       desc: 'Fitness & style' },
-  'Accessories':   { Icon: IconAccessory,   desc: 'Cables & more' },
-};
 
-export default function Categories() {
+function IconFiber() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 17c4 0 4-10 9-10s5 10 9 10" />
+      <circle cx="3" cy="17" r="1.2" fill="currentColor" stroke="none" />
+      <circle cx="21" cy="17" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconCamera() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8.5 15 5l1.4 4.6L4.4 13z" />
+      <path d="M16 8l4.5-1.3" />
+      <path d="M8 12.5v3.5m-3 0h8" />
+    </svg>
+  );
+}
+
+function IconRack() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="1.6" />
+      <path d="M4 9h16M4 15h16M8 6h.01M8 12h.01M8 18h.01" />
+    </svg>
+  );
+}
+
+function IconNetwork() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="3" width="6" height="5" rx="1" />
+      <rect x="2.5" y="16" width="6" height="5" rx="1" />
+      <rect x="15.5" y="16" width="6" height="5" rx="1" />
+      <path d="M12 8v4M5.5 16v-4h13v4" />
+    </svg>
+  );
+}
+
+function IconAV() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="12" rx="1.6" />
+      <path d="M8 20h8M12 16v4" />
+    </svg>
+  );
+}
+
+const DEPT_LABELS = { networking: 'Networking, CCTV & IT', consumer: 'Consumer Tech' };
+
+/** Pick an icon from the category name (works for any category an admin creates later). */
+function iconFor(name = '') {
+  const n = name.toLowerCase();
+  if (/sfp|fiber|fibre|patch|odf|splitter|pigtail|ftth/.test(n)) return IconFiber;
+  if (/cctv|camera|dvr|nvr|surveil|hikvision|dahua|tapo/.test(n)) return IconCamera;
+  if (/rack|cabinet/.test(n)) return IconRack;
+  if (/network|switch|router|wifi|wi-fi|access point|ruijie|tp-link|poe/.test(n)) return IconNetwork;
+  if (/hdmi|av\b|display|projector/.test(n)) return IconAV;
+  if (/phone|mobile/.test(n)) return IconPhone;
+  if (/laptop|computer|pc/.test(n)) return IconLaptop;
+  if (/headphone|audio|speaker|earbud/.test(n)) return IconHeadphones;
+  if (/gam/.test(n)) return IconGaming;
+  if (/watch/.test(n)) return IconWatch;
+  return IconAccessory;
+}
+
+/** Home page "Shop by Category" - built from the live category tree, grouped by department. */
+export default function Categories({ tree }) {
+  const departments = ['networking', 'consumer'].filter((d) => tree?.departments?.[d]?.length);
+  if (!departments.length) return null;
+
   return (
     <section className="categories">
       <div className="categories__header">
         <h2 className="section-title">Shop by Category</h2>
-        <Link href="/products" className="categories__see-all">
-          View All →
-        </Link>
+        <Link href="/products" className="categories__see-all">View All →</Link>
       </div>
 
-      <div className="categories__grid">
-        {CATEGORIES.map((category) => {
-          const meta = CATEGORY_META[category] || { Icon: IconAccessory, desc: 'Explore' };
-          const { Icon } = meta;
-          return (
-            <Link
-              key={category}
-              href={`/products?category=${encodeURIComponent(category)}`}
-              className="category-card reveal reveal--visible"
-            >
-              <span className="category-card__icon-ring" aria-hidden="true">
-                <Icon />
-              </span>
-              <span className="category-card__name">{category}</span>
-              <span className="category-card__desc">{meta.desc}</span>
-            </Link>
-          );
-        })}
-      </div>
+      {departments.map((dept) => (
+        <div key={dept} className="categories__dept">
+          {departments.length > 1 && (
+            <div className="categories__dept-head">
+              <h3>{DEPT_LABELS[dept]}</h3>
+              <Link href={`/products?dept=${dept}`}>Browse all →</Link>
+            </div>
+          )}
+          <div className="categories__grid">
+            {tree.departments[dept].slice(0, 12).map((cat) => {
+              const Icon = iconFor(cat.name);
+              return (
+                <Link key={cat.id} href={`/category/${cat.slug}`} className="category-card reveal reveal--visible">
+                  <span className="category-card__icon-ring" aria-hidden="true"><Icon /></span>
+                  <span className="category-card__name">{cat.name}</span>
+                  <span className="category-card__desc">{cat.count} product{cat.count === 1 ? '' : 's'}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </section>
   );
 }

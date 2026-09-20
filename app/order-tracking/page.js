@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { formatPrice } from '@/lib/format';
 
 const TRACKING_STEPS = ['Order Placed', 'Packed', 'Shipped', 'Delivered'];
 
@@ -17,6 +18,8 @@ function OrderTrackingContent() {
   const initialOrderId = searchParams.get('orderId') || '';
 
   const [orderId, setOrderId] = useState(initialOrderId);
+  const [phone, setPhone] = useState('');
+  const [needsPhone, setNeedsPhone] = useState(false);
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -34,11 +37,17 @@ function OrderTrackingContent() {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/orders/${id}`, { cache: 'no-store' });
-      const data = await res.json();
+      const cleanId = String(id).replace(/[^0-9]/g, '');
+      if (!cleanId) { setError('Please enter a valid Order ID (numbers only).'); setOrderData(null); return; }
+      const q = phone.trim() ? `?phone=${encodeURIComponent(phone.trim())}` : '';
+      const res = await fetch(`/api/orders/${cleanId}${q}`, { cache: 'no-store' });
+      let data = {};
+      try { data = await res.json(); } catch { /* empty body */ }
       if (res.ok) {
         setOrderData(data);
+        setNeedsPhone(false);
       } else {
+        setNeedsPhone(Boolean(data.needsPhone) || res.status === 404);
         setError(data.error || 'Order not found');
         setOrderData(null);
       }
@@ -66,7 +75,7 @@ function OrderTrackingContent() {
     <div className="container py-8">
       <div className="orders-header">
         <h1 className="page-title">Track Your Order</h1>
-        <p className="catalog-page__sub">Enter your Order ID to see real-time delivery status.</p>
+        <p className="catalog-page__sub">Enter your Order ID and the phone number used on the order to see live delivery status.</p>
       </div>
 
       {/* Search Bar */}
@@ -97,6 +106,20 @@ function OrderTrackingContent() {
             </>
           ) : 'Track'}
         </button>
+      </div>
+
+      <div className="tracking-phone mt-4">
+        <input
+          type="tel"
+          className="form-input"
+          style={{ maxWidth: '460px' }}
+          placeholder={needsPhone ? 'Phone number used on the order (03XXXXXXXXX)' : 'Phone number on the order (not needed if you are signed in)'}
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ''))}
+          onKeyDown={(e) => e.key === 'Enter' && fetchOrderStatus()}
+          maxLength={14}
+          aria-label="Phone number used on the order"
+        />
       </div>
 
       {error && (
@@ -152,19 +175,28 @@ function OrderTrackingContent() {
             {Array.isArray(orderData.items) && orderData.items.map((item, idx) => (
               <div key={idx} className="order-card__item-row">
                 <span>{item.name || item.title || 'Product'} <span className="order-card__qty">× {item.quantity || 1}</span></span>
-                <span className="order-card__item-price">${Number(item.price).toFixed(2)}</span>
+                <span className="order-card__item-price">{formatPrice(Number(item.price) * (item.quantity || 1))}</span>
               </div>
             ))}
+            {orderData.subtotal !== null && orderData.subtotal !== undefined && (
+              <>
+                <div className="order-card__item-row"><span>Subtotal</span><span className="order-card__item-price">{formatPrice(orderData.subtotal)}</span></div>
+                {orderData.discount_amount > 0 && <div className="order-card__item-row"><span>Discount{orderData.coupon_code ? ` (${orderData.coupon_code})` : ''}</span><span className="order-card__item-price">− {formatPrice(orderData.discount_amount)}</span></div>}
+                <div className="order-card__item-row"><span>Shipping</span><span className="order-card__item-price">{orderData.shipping_fee > 0 ? formatPrice(orderData.shipping_fee) : 'Free'}</span></div>
+                {orderData.tax_amount > 0 && <div className="order-card__item-row"><span>Tax</span><span className="order-card__item-price">{formatPrice(orderData.tax_amount)}</span></div>}
+                {orderData.cod_fee > 0 && <div className="order-card__item-row"><span>COD fee</span><span className="order-card__item-price">{formatPrice(orderData.cod_fee)}</span></div>}
+              </>
+            )}
             <div className="tracking-items__total">
               <span>Total Amount</span>
-              <span className="checkout-total-val">${Number(orderData.total_amount).toFixed(2)}</span>
+              <span className="checkout-total-val">{formatPrice(orderData.total_amount)}</span>
             </div>
           </div>
 
           {/* Delivery Address */}
           <div className="tracking-address mt-4">
             <span className="order-card__label">Delivery Address</span>
-            <p className="tracking-address__value">{orderData.address}, {orderData.city}</p>
+            <p className="tracking-address__value">{orderData.address ? `${orderData.address}, ` : ''}{orderData.city}</p>
           </div>
         </div>
       )}

@@ -1,6 +1,10 @@
 node_modules
 .next
 out
+.vercel
+.env
 .env*.local
+backups/
 npm-debug.log*
+*.log
 .DS_Store

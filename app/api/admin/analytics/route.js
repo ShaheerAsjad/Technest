@@ -13,7 +13,7 @@ export async function GET() {
 
     const [totals] = await sql`
       SELECT
-        COALESCE(SUM(total_amount), 0) AS revenue,
+        COALESCE(SUM(total_amount) FILTER (WHERE status NOT IN ('Cancelled', 'Returned')), 0) AS revenue,
         COUNT(*) AS order_count
       FROM orders
     `;
@@ -32,7 +32,7 @@ export async function GET() {
     `;
 
     // Top-selling items: parse the JSONB items array on every order.
-    const allOrders = await sql`SELECT items FROM orders`;
+    const allOrders = await sql`SELECT items FROM orders WHERE status NOT IN ('Cancelled', 'Returned') ORDER BY id DESC LIMIT 5000`;
     const salesByProduct = {};
     for (const order of allOrders) {
       const items = Array.isArray(order.items) ? order.items : [];

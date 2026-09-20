@@ -79,15 +79,6 @@ export default function SignInPage() {
         }
     };
 
-    async function handleDirectAdminAccess() {
-        try {
-            await fetch('/api/setup-admin');
-        } catch {
-            // Ignore fetch error
-        }
-        window.location.href = '/admin';
-    }
-
     return (
         <div style={{
             width: '100%',
@@ -199,9 +190,8 @@ export default function SignInPage() {
                                 appearance={staffAppearance}
                             />
 
-                            <button
-                                type="button"
-                                onClick={handleDirectAdminAccess}
+                            <a
+                                href="/admin"
                                 style={{
                                     width: '100%',
                                     padding: '10px 16px',
@@ -211,13 +201,13 @@ export default function SignInPage() {
                                     color: '#f97316',
                                     fontSize: '0.85rem',
                                     fontWeight: '600',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
                                     textAlign: 'center',
+                                    textDecoration: 'none',
+                                    boxSizing: 'border-box',
                                 }}
                             >
-                                ⚡ Already Authenticated? Enter Admin Panel Directly →
-                            </button>
+                                Already signed in? Open the Admin Panel →
+                            </a>
                         </div>
                     )}
                 </div>

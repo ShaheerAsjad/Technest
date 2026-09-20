@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { formatPrice } from '@/lib/format';
 
 const STATUSES = ['Order Placed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
@@ -25,14 +26,22 @@ export default function AdminOrdersPage() {
   useEffect(() => { load(); }, []);
 
   async function updateStatus(id, status) {
+    if (status === 'Cancelled' && !confirm(`Cancel order #${id}? The items will be put back in stock.`)) return;
     setUpdatingId(id);
-    const res = await fetch(`/api/admin/orders/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
+      } else {
+        const j = await res.json().catch(() => ({}));
+        alert(j.error || 'Could not update the order status.');
+      }
+    } catch {
+      alert('Network error - the status was not changed.');
     }
     setUpdatingId(null);
   }
@@ -64,7 +73,7 @@ export default function AdminOrdersPage() {
         <table className="admin-table">
           <thead>
             <tr>
-              <th>ID</th><th>Customer</th><th>Email</th><th>Total</th><th>Status</th><th>Date</th>
+              <th>ID</th><th>Customer</th><th>Phone</th><th>City</th><th>Total</th><th>Status</th><th>Date</th><th>Invoice</th>
             </tr>
           </thead>
           <tbody>
@@ -72,8 +81,9 @@ export default function AdminOrdersPage() {
               <tr key={o.id}>
                 <td>#{o.id}</td>
                 <td>{o.customer_name}</td>
-                <td>{o.customer_email || '—'}</td>
-                <td>${Number(o.total_amount).toFixed(2)}</td>
+                <td>{o.phone || '—'}</td>
+                <td>{o.city || '—'}</td>
+                <td>{formatPrice(o.total_amount)}</td>
                 <td>
                   <select
                     className="admin-table__select"
@@ -85,6 +95,7 @@ export default function AdminOrdersPage() {
                   </select>
                 </td>
                 <td>{new Date(o.created_at).toLocaleDateString()}</td>
+                <td><a href={`/admin/orders/${o.id}/invoice`} target="_blank" rel="noopener noreferrer" className="admin-link">Print</a></td>
               </tr>
             ))}
           </tbody>

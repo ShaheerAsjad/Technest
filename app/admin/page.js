@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { formatPrice } from '@/lib/format';
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState(null);
@@ -41,7 +42,7 @@ export default function AdminDashboardPage() {
       <div className="admin-stats-grid">
         <div className="admin-stat-card">
           <span className="admin-stat-card__label">Total Revenue</span>
-          <span className="admin-stat-card__value">${revenue.toFixed(2)}</span>
+          <span className="admin-stat-card__value">{formatPrice(revenue)}</span>
         </div>
         <div className="admin-stat-card">
           <span className="admin-stat-card__label">Total Orders</span>
@@ -95,7 +96,7 @@ export default function AdminDashboardPage() {
               {recentOrders.map((o) => (
                 <tr key={o.id}>
                   <td>#{o.id}</td>
-                  <td>${Number(o.total_amount).toFixed(2)}</td>
+                  <td>{formatPrice(o.total_amount)}</td>
                   <td>{new Date(o.created_at).toLocaleString()}</td>
                 </tr>
               ))}

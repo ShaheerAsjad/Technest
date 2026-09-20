@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { UserButton, useUser } from '@clerk/nextjs';
-import LoyaltyBadge from './LoyaltyBadge';
+import CategoryBar from './CategoryBar';
 
 /* ─── Inline SVG icons ─── */
 function IconCart({ size = 18 }) {
@@ -79,9 +79,9 @@ function IconDashboard({ size = 15 }) {
   );
 }
 
-export default function Navbar() {
+export default function Navbar({ tree }) {
   const pathname = usePathname();
-  const { cartCount, wishlistCount, theme, toggleTheme } = useApp();
+  const { cartCount, wishlistCount, theme, toggleTheme, openCart } = useApp();
   const { isSignedIn, isLoaded } = useUser();
   const [scrolled, setScrolled]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
@@ -134,6 +134,13 @@ export default function Navbar() {
   const closeMenu = () => setMenuOpen(false);
   const isStaff = userRole === 'staff';
 
+  /* Cart icon opens the slide-in drawer (the /cart page stays available from inside it) */
+  const handleCartClick = (e) => {
+    if (pathname === '/cart' || pathname === '/checkout') return;
+    e.preventDefault();
+    openCart();
+  };
+
   /* Never render Navbar on /admin pages */
   if (pathname?.startsWith('/admin')) {
     return null;
@@ -180,7 +187,8 @@ export default function Navbar() {
             aria-label="Search (Ctrl+K)"
           >
             <IconSearch size={17} />
-            <kbd className="navbar__search-kbd">⌘K</kbd>
+            <span className="navbar__search-text">Search products, brands, SKUs…</span>
+            <kbd className="navbar__search-kbd">Ctrl K</kbd>
           </button>
 
           {/* Theme toggle */}
@@ -200,6 +208,7 @@ export default function Navbar() {
             href="/cart"
             className={`navbar__icon-link navbar__desktop-only${bounce ? ' navbar__icon-link--bounce' : ''}`}
             aria-label={`Cart (${cartCount} items)`}
+            onClick={handleCartClick}
           >
             <IconCart size={18} />
             <span className="navbar__icon-label">Cart</span>
@@ -210,8 +219,6 @@ export default function Navbar() {
           {isLoaded && (
             isSignedIn ? (
               <div className="navbar__auth">
-                <LoyaltyBadge />
-
                 {/* Dashboard shortcut badge — only rendered for Admin/Employee */}
                 {isStaff && (
                   <Link
@@ -237,6 +244,9 @@ export default function Navbar() {
         </div>
       </div>
 
+      {/* ── Category strip (desktop) ── */}
+      <CategoryBar tree={tree} />
+
       {/* ── Mobile-only utility row ── */}
       <div className="navbar__row navbar__row--mobile-utility">
         <button
@@ -257,6 +267,7 @@ export default function Navbar() {
           href="/cart"
           className={`navbar__mobile-icon${bounce ? ' navbar__icon-link--bounce' : ''}`}
           aria-label={`Cart (${cartCount} items)`}
+          onClick={handleCartClick}
         >
           <IconCart size={19} />
           {cartCount > 0 && <span className="navbar__badge">{cartCount}</span>}
@@ -270,6 +281,7 @@ export default function Navbar() {
           <Link href="/products"       className="navbar__link" onClick={closeMenu}>Products</Link>
           <Link href="/my-orders"      className="navbar__link" onClick={closeMenu}>My Orders</Link>
           <Link href="/order-tracking" className="navbar__link navbar__link--track" onClick={closeMenu}>Track Order</Link>
+          <Link href="/b2b"            className="navbar__link" onClick={closeMenu}>B2B / Bulk Orders</Link>
           <Link href="/about"          className="navbar__link" onClick={closeMenu}>About</Link>
           <Link href="/contact"        className="navbar__link" onClick={closeMenu}>Contact</Link>
           {isStaff && (

@@ -22,13 +22,50 @@ export async function PATCH(request, { params }) {
   }
 
   try {
+    const orderId = parseInt(id, 10);
+    if (!Number.isFinite(orderId)) {
+      return NextResponse.json({ error: 'Invalid order.' }, { status: 400 });
+    }
+
     const [order] = await sql`
-      UPDATE orders SET status = ${status} WHERE id = ${id}
-      RETURNING id, user_id, customer_name
+      UPDATE orders SET status = ${status} WHERE id = ${orderId}
+      RETURNING id, user_id, customer_name, items, stock_restored
     `;
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
+    }
+
+    // Cancelling an order puts the stock back - exactly once (guarded by stock_restored).
+    if (status === 'Cancelled') {
+      const claimed = await sql`
+        UPDATE orders SET stock_restored = TRUE
+        WHERE id = ${orderId} AND stock_restored = FALSE RETURNING items
+      `;
+      if (claimed[0]) {
+        let items = claimed[0].items;
+        if (typeof items === 'string') { try { items = JSON.parse(items); } catch { items = []; } }
+        for (const it of Array.isArray(items) ? items : []) {
+          const pid = parseInt(it.id, 10);
+          const qty = Math.trunc(Number(it.quantity));
+          if (Number.isFinite(pid) && qty > 0) {
+            await sql`UPDATE products SET stock = stock + ${qty} WHERE id = ${pid}`;
+          }
+        }
+      }
+    } else if (order.stock_restored) {
+      // Re-opening a cancelled order: take the stock out again (only if still available)
+      let items = order.items;
+      if (typeof items === 'string') { try { items = JSON.parse(items); } catch { items = []; } }
+      const list = (Array.isArray(items) ? items : []).map((it) => ({ id: parseInt(it.id, 10), quantity: Math.trunc(Number(it.quantity)) }))
+        .filter((it) => Number.isFinite(it.id) && it.quantity > 0);
+      let ok = true;
+      for (const it of list) {
+        const r = await sql`UPDATE products SET stock = stock - ${it.quantity} WHERE id = ${it.id} AND stock >= ${it.quantity} RETURNING id`;
+        if (!r[0]) ok = false;
+      }
+      await sql`UPDATE orders SET stock_restored = FALSE WHERE id = ${orderId}`;
+      if (!ok) console.warn('[admin/orders] re-opened order', orderId, 'but some items had insufficient stock');
     }
 
     await writeAuditLog({
@@ -36,7 +73,7 @@ export async function PATCH(request, { params }) {
       actorName: `${access.user.first_name || ''} ${access.user.last_name || ''}`.trim(),
       action: 'order.status_changed',
       targetType: 'order',
-      targetId: id,
+      targetId: orderId,
       details: { status },
     });
 
