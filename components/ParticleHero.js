@@ -21,7 +21,15 @@ export default function ParticleHero() {
     const H = mount.clientHeight;
 
     /* ── Renderer ── */
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // WebGL can be unavailable (GPU blocked, hardware acceleration off, some in-app browsers):
+    // then the hero is simply shown without the particle canvas instead of crashing the page.
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch (err) {
+      console.warn('[ParticleHero] WebGL is not available - showing the hero without particles.', err && err.message);
+      return undefined;
+    }
     renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);

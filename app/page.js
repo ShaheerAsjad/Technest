@@ -5,6 +5,7 @@ import Categories from '@/components/Categories';
 import ProductCard from '@/components/ProductCard';
 import TrustStrip from '@/components/TrustStrip';
 import BrandStrip from '@/components/BrandStrip';
+import SafeBoundary from '@/components/SafeBoundary';
 import { getHomeData } from '@/lib/catalog';
 import { getStoreSettings } from '@/lib/settings';
 import { formatPrice } from '@/lib/format';
@@ -43,11 +44,11 @@ export default async function HomePage() {
 
   return (
     <>
-      <IntroLoader />
-      <Hero freeShippingText={freeText} />
-      <TrustStrip eta={sh.etaText} freeText={freeText} />
-      <BrandStrip brands={data.brands} />
-      <Categories tree={data.tree} />
+      <SafeBoundary name="IntroLoader"><IntroLoader /></SafeBoundary>
+      <SafeBoundary name="Hero"><Hero freeShippingText={freeText} /></SafeBoundary>
+      <SafeBoundary name="TrustStrip"><TrustStrip eta={sh.etaText} freeText={freeText} /></SafeBoundary>
+      <SafeBoundary name="BrandStrip"><BrandStrip brands={data.brands} /></SafeBoundary>
+      <SafeBoundary name="Categories"><Categories tree={data.tree} /></SafeBoundary>
 
       {nothing ? (
         <section className="featured">
@@ -55,9 +56,9 @@ export default async function HomePage() {
         </section>
       ) : (
         <>
-          <Section title="Featured Products" sub="Hand-picked from our latest inventory" href="/products?sort=featured" products={data.featured} />
-          <Section title="New in Networking & IT" sub="Fiber, CCTV, switches and accessories" href="/products?dept=networking" products={data.newNetworking} />
-          <Section title="New in Consumer Tech" sub="Phones, laptops, gaming and more" href="/products?dept=consumer" products={data.newConsumer} />
+          <SafeBoundary name="Featured"><Section title="Featured Products" sub="Hand-picked from our latest inventory" href="/products?sort=featured" products={data.featured} /></SafeBoundary>
+          <SafeBoundary name="NewNetworking"><Section title="New in Networking & IT" sub="Fiber, CCTV, switches and accessories" href="/products?dept=networking" products={data.newNetworking} /></SafeBoundary>
+          <SafeBoundary name="NewConsumer"><Section title="New in Consumer Tech" sub="Phones, laptops, gaming and more" href="/products?dept=consumer" products={data.newConsumer} /></SafeBoundary>
         </>
       )}
 

@@ -14,7 +14,7 @@ export async function GET() {
     const need = {
       products: ['slug', 'sku', 'brand', 'images', 'specs', 'free_shipping', 'tax_rate'],
       categories: ['slug', 'parent_id', 'department', 'sort_order', 'is_active'],
-      orders: ['subtotal', 'shipping_fee', 'tax_amount', 'pricing_snapshot', 'idempotency_key'],
+      orders: ['subtotal', 'shipping_fee', 'tax_amount', 'pricing_snapshot', 'idempotency_key', 'payment_status'],
       coupons: ['min_order_amount', 'max_uses', 'used_count', 'active'],
     };
     const cols = await sql`

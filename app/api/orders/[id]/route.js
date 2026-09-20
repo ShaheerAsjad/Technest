@@ -52,6 +52,7 @@ export async function GET(request, { params }) {
         status: order.status,
         created_at: order.created_at,
         payment_method: order.payment_method,
+        payment_status: order.payment_status || 'Pending',
         items: Array.isArray(items) ? items : [],
         total_amount: Number(order.total_amount),
         subtotal: order.subtotal !== null && order.subtotal !== undefined ? Number(order.subtotal) : null,

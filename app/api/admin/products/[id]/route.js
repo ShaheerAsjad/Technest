@@ -4,6 +4,7 @@ import { requireStaffAccess, actorName } from '@/lib/permissions';
 import { writeAuditLog } from '@/lib/audit';
 import { cleanText } from '@/lib/validators';
 import { bustCatalog } from '@/lib/revalidate';
+import { notifyBackInStock } from '@/lib/notify';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,16 +43,49 @@ export async function PATCH(request, { params }) {
       if (v === undefined) return json({ error: `Invalid value for ${key}.` }, 400, NO_STORE);
       values.push(v); sets.push(`${col} = $${values.length}`);
     }
-    if (!sets.length) return json({ error: 'Nothing to update.' }, 400, NO_STORE);
-    if (body.image && !('images' in body)) { values.push(JSON.stringify([cleanText(body.image, 2000)])); sets.push(`images = $${values.length}::jsonb`); }
+    const hasGallery = Array.isArray(body.images);
+    if (!sets.length && !hasGallery && body.specs === undefined) return json({ error: 'Nothing to update.' }, 400, NO_STORE);
+
+    // gallery (max 10 image URLs). The first one is also the main image.
+    if (hasGallery) {
+      const gallery = body.images.map((u) => cleanText(u, 2000)).filter(Boolean).slice(0, 10);
+      values.push(JSON.stringify(gallery)); sets.push(`images = $${values.length}::jsonb`);
+      if (gallery[0] && !('image' in body)) { values.push(gallery[0]); sets.push(`image = $${values.length}`); }
+    } else if (typeof body.image === 'string' && cleanText(body.image, 2000)) {
+      // only the main image was changed -> keep the gallery in sync
+      values.push(JSON.stringify([cleanText(body.image, 2000)])); sets.push(`images = $${values.length}::jsonb`);
+    }
+    // specs: plain { "Key": "Value" } object
+    if (body.specs !== undefined) {
+      const specs = {};
+      if (body.specs && typeof body.specs === 'object' && !Array.isArray(body.specs)) {
+        for (const [k, v] of Object.entries(body.specs).slice(0, 40)) {
+          const key = cleanText(k, 60); const val = cleanText(v, 200);
+          if (key && val) specs[key] = val;
+        }
+      }
+      values.push(JSON.stringify(specs)); sets.push(`specs = $${values.length}::jsonb`);
+    }
+
+    let prevStock = null;
+    if ('stock' in body) {
+      const prev = await sql`SELECT stock FROM products WHERE id = ${id}`;
+      prevStock = prev[0] ? Number(prev[0].stock) : null;
+    }
 
     values.push(id);
-    const rows = await sql.query(`UPDATE products SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING id`, values);
+    const rows = await sql.query(`UPDATE products SET ${sets.join(', ')} WHERE id = $${values.length} RETURNING id, stock`, values);
     if (!rows.length) return json({ error: 'Product not found.' }, 404, NO_STORE);
+
+    // Product is available again -> e-mail everybody who asked to be notified
+    let notified = null;
+    if (prevStock !== null && prevStock <= 0 && Number(rows[0].stock) > 0) {
+      notified = await notifyBackInStock(id);
+    }
 
     await writeAuditLog({ actorUserId: access.user.id, actorName: actorName(access.user), action: 'product.updated', targetType: 'product', targetId: id, details: body });
     bustCatalog();
-    return json({ success: true }, 200, NO_STORE);
+    return json({ success: true, notified }, 200, NO_STORE);
   } catch (err) {
     if (/products_sku_uq|duplicate key/i.test(String(err.message))) return json({ error: 'That SKU already exists on another product.' }, 409, NO_STORE);
     return serverError('admin/products PATCH', err, 'Could not update product.');

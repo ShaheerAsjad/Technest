@@ -47,6 +47,7 @@ async function db() {
   }
   try {
     const applied = (await sql`SELECT name FROM schema_migrations`).map((r) => r.name);
+    applied.includes('002_admin_upgrade.sql') ? ok('migration 002_admin_upgrade.sql applied') : warn('migration 002 not applied yet - it runs automatically on `npm run dev` / `npm run build`');
     applied.includes('001_upgrade.sql') ? ok('migration 001_upgrade.sql applied') : warn('migration not applied yet - it runs automatically on `npm run dev` / `npm run build` (or: npm run db:migrate)');
     applied.includes('seed:atlantic-demo-v1') ? ok('demo catalogue seeded') : warn('demo catalogue not seeded yet (runs with the migration)');
   } catch {

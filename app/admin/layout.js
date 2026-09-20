@@ -4,11 +4,16 @@ import { UserButton } from '@clerk/nextjs';
 import { getCurrentUserRecord } from '@/lib/permissions';
 import AdminSidebarNav from '@/components/AdminSidebarNav';
 
+export const dynamic = 'force-dynamic';
+
 const NAV_ITEMS = [
   { href: '/admin',            label: 'Dashboard',     module: null,        icon: '◆' },
   { href: '/admin/orders',     label: 'Orders',        module: 'orders',    icon: '▤' },
   { href: '/admin/products',   label: 'Inventory',     module: 'inventory', icon: '▦' },
   { href: '/admin/coupons',    label: 'Coupons',       module: 'coupons',   icon: '◈' },
+  { href: '/admin/brands',     label: 'Brands',        module: 'inventory', icon: '🏷' },
+  { href: '/admin/reviews',    label: 'Reviews',       module: 'inventory', icon: '⭐' },
+  { href: '/admin/stock-alerts', label: 'Stock Alerts', module: 'inventory', icon: '🔔' },
   { href: '/admin/categories', label: 'Categories',    module: 'inventory', icon: '🗂' },
   { href: '/admin/settings',   label: 'Store Settings', module: null, adminOnly: true, icon: '⚙' },
   { href: '/admin/support',    label: 'Support Inbox', module: 'support',   icon: '✉' },

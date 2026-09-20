@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import SafeBoundary from './SafeBoundary';
 
 // Three.js canvas — client-side only, no SSR
 const ParticleHero = dynamic(() => import('./ParticleHero'), {
@@ -50,7 +51,9 @@ export default function Hero({ freeShippingText = '' }) {
     <section className="hero" ref={sectionRef}>
 
       {/* ── Three.js Particle Canvas — absolute behind everything ── */}
-      <ParticleHero />
+      <SafeBoundary name="ParticleHero" fallback={null}>
+        <ParticleHero />
+      </SafeBoundary>
 
       {/* Overlays stacked on top of canvas */}
       <div className="hero__overlay" ref={overlayRef} />

@@ -7,6 +7,7 @@ import { sendOrderStatusEmail } from '@/lib/email';
 export const dynamic = 'force-dynamic';
 
 const VALID_STATUSES = ['Order Placed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+const VALID_PAYMENT = ['Pending', 'Paid', 'Refunded'];
 
 export async function PATCH(request, { params }) {
   const access = await requireStaffAccess('orders');
@@ -15,16 +16,39 @@ export async function PATCH(request, { params }) {
   }
 
   const { id } = await params;
-  const { status } = await request.json();
+  let body = null;
+  try { body = await request.json(); } catch { /* handled below */ }
+  const { status, paymentStatus } = body || {};
 
-  if (!VALID_STATUSES.includes(status)) {
+  if (status === undefined && paymentStatus === undefined) {
+    return NextResponse.json({ error: 'Nothing to update.' }, { status: 400 });
+  }
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: 'Invalid status.' }, { status: 400 });
+  }
+  if (paymentStatus !== undefined && !VALID_PAYMENT.includes(paymentStatus)) {
+    return NextResponse.json({ error: 'Invalid payment status.' }, { status: 400 });
   }
 
   try {
     const orderId = parseInt(id, 10);
     if (!Number.isFinite(orderId)) {
       return NextResponse.json({ error: 'Invalid order.' }, { status: 400 });
+    }
+
+    // Payment-only update (e.g. bank transfer received)
+    if (status === undefined) {
+      const [paid] = await sql`UPDATE orders SET payment_status = ${paymentStatus} WHERE id = ${orderId} RETURNING id`;
+      if (!paid) return NextResponse.json({ error: 'Order not found.' }, { status: 404 });
+      await writeAuditLog({
+        actorUserId: access.user.id,
+        actorName: `${access.user.first_name || ''} ${access.user.last_name || ''}`.trim(),
+        action: 'order.payment_changed',
+        targetType: 'order',
+        targetId: orderId,
+        details: { paymentStatus },
+      });
+      return NextResponse.json({ success: true });
     }
 
     const [order] = await sql`
@@ -66,6 +90,16 @@ export async function PATCH(request, { params }) {
       }
       await sql`UPDATE orders SET stock_restored = FALSE WHERE id = ${orderId}`;
       if (!ok) console.warn('[admin/orders] re-opened order', orderId, 'but some items had insufficient stock');
+    }
+
+    if (paymentStatus !== undefined) {
+      await sql`UPDATE orders SET payment_status = ${paymentStatus} WHERE id = ${orderId}`;
+    } else if (status === 'Delivered') {
+      // Cash on Delivery: the money is collected at the door
+      await sql`UPDATE orders SET payment_status = 'Paid'
+                WHERE id = ${orderId} AND payment_status = 'Pending' AND payment_method ILIKE 'cash%'`;
+    } else if (status === 'Cancelled') {
+      await sql`UPDATE orders SET payment_status = 'Pending' WHERE id = ${orderId} AND payment_status <> 'Paid'`;
     }
 
     await writeAuditLog({

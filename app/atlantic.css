@@ -420,3 +420,34 @@
   .details-layout { gap: 22px; }
   .checkout-layout, .cart-layout { gap: 18px; }
 }
+
+/* ---------------------------------------------------------------- small utilities */
+.mt-4 { margin-top: 1rem; }
+.empty-state { padding: 24px; text-align: center; color: #a1a1aa; }
+.tracking-phone { display: flex; }
+.filter-group { margin-bottom: 6px; }
+.details-notify { margin-top: 14px; padding: 14px 16px; border-radius: 12px; border: 1px dashed var(--color-border-strong); background: var(--glass-bg); }
+
+/* ------------------------------------------------------- admin: modal / toolbar / order details */
+.admin-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.admin-toolbar .form-input { flex: 1 1 200px; min-width: 0; max-width: 340px; }
+.admin-toolbar__count { margin-left: auto; color: #a1a1aa; font-size: 13px; }
+.admin-modal { position: fixed; inset: 0; z-index: 3200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.admin-modal__backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, .65); }
+.admin-modal__panel { position: relative; width: min(760px, 100%); max-height: 92vh; display: flex; flex-direction: column; background: #16161a; color: #e4e4e7; border: 1px solid #3f3f46; border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.admin-modal__head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #27272a; }
+.admin-modal__head h2 { font-size: 18px; }
+.admin-modal__head button { background: none; border: 0; color: #e4e4e7; font-size: 26px; cursor: pointer; line-height: 1; }
+.admin-modal__body { padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.admin-modal__foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #27272a; }
+.admin-modal__row { display: flex; gap: 10px; align-items: center; }
+.admin-modal__row .form-input { flex: 1; }
+.admin-modal__preview { max-height: 110px; max-width: 160px; object-fit: contain; background: #fff; border-radius: 8px; padding: 4px; margin-top: 8px; }
+.admin-modal__checks { display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; }
+.admin-modal__checks input { accent-color: var(--cyan); margin-right: 6px; }
+.admin-order-details td { background: rgba(255,255,255,.03); }
+.admin-order-details__grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 24px; padding: 6px 4px; }
+.admin-order-details h4 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #a1a1aa; margin-bottom: 6px; }
+.admin-order-details p, .admin-order-details li { font-size: 13.5px; margin: 3px 0; }
+.admin-order-details ul { list-style: none; padding: 0; }
+@media (max-width: 760px) { .admin-order-details__grid { grid-template-columns: 1fr; } }

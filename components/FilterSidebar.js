@@ -111,8 +111,8 @@ export default function FilterSidebar({ basePath, filters, facets, categoryGroup
         {facets?.brands?.length > 0 && (
           <Section id="brand" title="Brand" collapsed={collapsed} onToggle={toggle}>
             <ul className="filter-list">
-              {facets.brands.map((b) => {
-                const checked = filters.brands.some((x) => x.toLowerCase() === b.name.toLowerCase());
+              {facets.brands.filter((b) => b && b.name).map((b) => {
+                const checked = filters.brands.some((x) => x.toLowerCase() === String(b.name).toLowerCase());
                 return (
                   <li key={b.name}>
                     <label className="filter-check">

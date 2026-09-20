@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import ProductEditModal from '@/components/admin/ProductEditModal';
 
 const EMPTY_PRODUCT_FORM = {
   title: '',
@@ -29,6 +30,11 @@ export default function AdminProductsPage() {
   const [addError, setAddError] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState('');
+  const [catFilter, setCatFilter] = useState('');
+  const [stockFilter, setStockFilter] = useState('all');
+  const [notice, setNotice] = useState('');
 
   // Image Upload State
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -186,6 +192,16 @@ export default function AdminProductsPage() {
     boxSizing: 'border-box',
   };
 
+  const q = search.trim().toLowerCase();
+  const filteredProducts = products.filter((p) => {
+    if (catFilter && String(p.category_id) !== String(catFilter)) return false;
+    if (stockFilter === 'low' && !(Number(p.stock) > 0 && Number(p.stock) <= 5 && !p.is_archived)) return false;
+    if (stockFilter === 'out' && !(Number(p.stock) <= 0 && !p.is_archived)) return false;
+    if (stockFilter === 'archived' && !p.is_archived) return false;
+    if (q && !`${p.title} ${p.sku || ''} ${p.brand || ''}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
@@ -230,7 +246,7 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Price ($) *</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Price (Rs.) *</label>
                 <input
                   id="prod-price"
                   type="number"
@@ -243,7 +259,7 @@ export default function AdminProductsPage() {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Original Price ($)</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#a1a1aa', marginBottom: '6px' }}>Original Price (Rs.)</label>
                 <input
                   id="prod-orig-price"
                   type="number"
@@ -465,6 +481,21 @@ export default function AdminProductsPage() {
 
       {/* ── Products Table ── */}
       <div className="admin-panel">
+        {notice && <div className="notice notice--ok" role="status">{notice}</div>}
+        <div className="admin-toolbar">
+          <input className="form-input" placeholder="Search name, SKU or brand..." value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search products" />
+          <select className="form-input" value={catFilter} onChange={(e) => setCatFilter(e.target.value)} aria-label="Filter by category">
+            <option value="">All categories</option>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.label || c.name}</option>)}
+          </select>
+          <select className="form-input" value={stockFilter} onChange={(e) => setStockFilter(e.target.value)} aria-label="Filter by stock">
+            <option value="all">All stock levels</option>
+            <option value="low">Low stock (5 or less)</option>
+            <option value="out">Out of stock</option>
+            <option value="archived">Archived</option>
+          </select>
+          <span className="admin-toolbar__count">{filteredProducts.length} of {products.length}</span>
+        </div>
         {loading ? (
           <p className="empty-state">Loading inventory…</p>
         ) : (
@@ -480,13 +511,14 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {filteredProducts.map((p) => (
                 <tr key={p.id} className={p.is_archived ? 'admin-table__row--archived' : ''}>
                   <td className="admin-table__product-cell">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.image || '/placeholder.png'} alt="" className="admin-table__thumb" />
                     <div>
                       <strong>{p.title}</strong>
+                      {(p.sku || p.brand) && <div className="admin-cat-slug">{[p.brand, p.sku].filter(Boolean).join(' · ')}</div>}
                       {p.is_featured && <span style={{ marginLeft: '6px', fontSize: '0.7rem', color: '#f97316' }}>★ Featured</span>}
                     </div>
                   </td>
@@ -518,6 +550,7 @@ export default function AdminProductsPage() {
                     )}
                   </td>
                   <td className="admin-table__actions">
+                    <button className="btn btn--secondary admin-table__btn-sm" onClick={() => setEditing(p)}>Edit</button>
                     {edits[p.id] && (
                       <button className="btn btn--primary admin-table__btn-sm" onClick={() => saveEdit(p.id)}>
                         Save
@@ -543,7 +576,23 @@ export default function AdminProductsPage() {
           </table>
         )}
         {!loading && products.length === 0 && <p className="empty-state">No products found in inventory.</p>}
+        {!loading && products.length > 0 && filteredProducts.length === 0 && <p className="empty-state">No products match your search / filters.</p>}
       </div>
+
+      {editing && (
+        <ProductEditModal
+          key={editing.id}
+          product={editing}
+          categories={categories}
+          onClose={() => setEditing(null)}
+          onSaved={(res) => {
+            setEditing(null);
+            setNotice(res?.notified && res.notified.sent ? `Saved. ${res.notified.sent} customer(s) were e-mailed that it is back in stock.` : 'Product saved.');
+            setTimeout(() => setNotice(''), 5000);
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 }

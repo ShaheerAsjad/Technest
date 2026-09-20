@@ -64,6 +64,9 @@ Agar koi masla ho: `npm run verify` chalayein — yeh saaf PASS / WARN / FAIL li
    - **Orders**: status badlein; **Cancelled** karne par stock wapas; **Invoice > Print**.
    - **Inventory**: SKU / Brand / Tax% / Free shipping wale naye fields.
    - **Categories**: naya category / department.
+   - **Inventory > Edit**: kisi bhi product ki har cheez (title, category, brand, SKU, price, discount, stock, photos, specs) badal sakte hain; search + filters.
+   - **Orders > View / Payment**: address, items, notes dekhein; bank transfer aane par Payment = Paid karein.
+   - **Reviews / Stock Alerts / Brands**: spam reviews hatana, out-of-stock waiting list (stock add karte hi customers ko e-mail), brand logos.
 10. Purane Technest products (Phones, Laptops...) **waise hi maujood** hain: nav bar mein **Consumer Tech** dropdown, home par alag section.
 
 **Demo se pehle 2 minute:** Admin > Store Settings > "Store information" mein phone / WhatsApp / email / address bhar ke Save karein
@@ -117,6 +120,9 @@ Category ko `Parent > Child` likhein, jaise `SFP / QSFP > SFP 10G`. Jo categorie
 | Checkout "session expired" | Dobara sign in karein |
 | Price/total ajeeb | `npm run test:pricing` (20 tests) — total hamesha server calculate karta hai |
 | Vercel build fail | Build log dekhein; sab se aam wajah env variable missing hota hai |
+| Vercel log mein `Dynamic server usage ... admin` | Is version mein fix ho chuka hai (root layout `force-dynamic`) |
+| Windows par `NODE_OPTIONS is not recognized` | Is version ke `dev`/`build` scripts cross-platform hain (`node --max-old-space-size=4096 ...`) |
+| `@next/swc-win32-x64-msvc` package.json mein add ho gaya | Hata dein — Vercel (Linux) par install fail karta hai; `next` ise khud optional dependency ke taur par install kar leta hai |
 | Kuch ulta ho gaya | `backups/backup-*.json` (purana data), `git revert`, ya Vercel > Deployments > purani deployment > **Promote to Production** |
 
 **Security:** Purana `/api/setup-admin` route aur sign-in ka "Enter Admin Panel Directly" button **hata diya gaya hai**.

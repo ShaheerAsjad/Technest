@@ -17,6 +17,11 @@ import Providers from './providers';
 import { getCategoryTree } from '@/lib/catalog';
 import { getStoreSettings } from '@/lib/settings';
 
+// The storefront reads live data (categories, settings, login state). Rendering every page per request
+// stops Next.js from trying to pre-render pages at build time (that produced the
+// "Dynamic server usage" errors in the Vercel log, and could freeze the menu / settings into static HTML).
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'TechNest — Networking, CCTV & Tech Marketplace',
   description: 'Fiber, networking, CCTV and IT hardware from trusted brands, plus phones, laptops and gaming gear. Shop online at TechNest.',

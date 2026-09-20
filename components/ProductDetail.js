@@ -9,6 +9,7 @@ import { fetchJson } from '@/lib/client';
 import ProductCard from '@/components/ProductCard';
 import ReviewsSection from '@/components/ReviewsSection';
 import SafeImage from '@/components/SafeImage';
+import NotifyMeForm from '@/components/NotifyMeForm';
 
 const RECENT_KEY = 'technest_recently_viewed';
 
@@ -138,6 +139,13 @@ export default function ProductDetail({ product, related = [], settings, trail =
               {outOfStock ? 'Out of Stock' : product.stock <= 5 ? `Only ${product.stock} left in stock` : 'In stock'}
             </p>
           </div>
+
+          {outOfStock && (
+            <div className="details-notify">
+              <p className="details-delivery__title">🔔 Get notified when it is back in stock</p>
+              <NotifyMeForm productId={product.id} />
+            </div>
+          )}
 
           <div className="details-action-group">
             <div className="details-qty-row">

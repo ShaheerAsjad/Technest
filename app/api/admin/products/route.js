@@ -15,7 +15,7 @@ export async function GET() {
     const products = await sql`
       SELECT p.id, p.title, p.price, p.stock, p.image, p.is_archived,
              p.description, p.original_price, p.is_on_sale, p.is_featured,
-             p.sku, p.brand, p.slug, p.free_shipping, p.tax_rate,
+             p.sku, p.brand, p.slug, p.free_shipping, p.tax_rate, p.images, p.specs,
              p.category_id, c.name AS category, c.department
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id

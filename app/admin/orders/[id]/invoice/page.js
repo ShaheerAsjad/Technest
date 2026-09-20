@@ -44,7 +44,7 @@ export default async function InvoicePage({ params }) {
           <p><strong>Order #</strong> {o.id}</p>
           <p><strong>Date</strong> {formatDateTime(o.created_at)}</p>
           <p><strong>Status</strong> {o.status}</p>
-          <p><strong>Payment</strong> {o.payment_method}</p>
+          <p><strong>Payment</strong> {o.payment_method} ({o.payment_status || 'Pending'})</p>
         </div>
       </header>
 

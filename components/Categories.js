@@ -112,8 +112,8 @@ function IconAV() {
 const DEPT_LABELS = { networking: 'Networking, CCTV & IT', consumer: 'Consumer Tech' };
 
 /** Pick an icon from the category name (works for any category an admin creates later). */
-function iconFor(name = '') {
-  const n = name.toLowerCase();
+function iconFor(name) {
+  const n = String(name || '').toLowerCase();
   if (/sfp|fiber|fibre|patch|odf|splitter|pigtail|ftth/.test(n)) return IconFiber;
   if (/cctv|camera|dvr|nvr|surveil|hikvision|dahua|tapo/.test(n)) return IconCamera;
   if (/rack|cabinet/.test(n)) return IconRack;

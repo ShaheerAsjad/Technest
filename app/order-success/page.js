@@ -64,7 +64,7 @@ function OrderSuccessContent() {
           )}
           <div className="success-slip__row">
             <span className="success-slip__label">Payment Status</span>
-            <span className="success-slip__value success-slip__value--pending">Pending</span>
+            <span className="success-slip__value success-slip__value--pending">{order?.payment_status || 'Pending'}</span>
           </div>
         </div>
 
